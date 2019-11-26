@@ -1,0 +1,31 @@
+<%
+page = {
+  bodyAttrs: {
+    layout: 'layout value',
+    dogs: 'woof',
+    onload: 'startFn()'
+  },
+  title: 'Test application',
+  description: 'This is a test application',
+  favicon: '/img/favicon.ico'
+};
+assets = {
+  head: {
+    js: [],
+    css: ['/css/main.css']
+  },
+  js: ['/mjs/firstcheck.js'],
+  css: []
+};
+%>
+  <h1><%-appName%></h1>
+  <p>Welcome to the jungle: <%-originalUrl%></p>
+  <p id="example"></p>
+  <p id="json"></p>
+  <script>
+    function startFn() {
+      const el = document.getElementById('example');
+      el.innerHTML = "Testing from JS!";
+      getData();
+    }
+  </script>

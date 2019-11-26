@@ -1,0 +1,364 @@
+<%
+_layoutFile = false;
+%><!doctype html>
+<html>
+<head>
+  <title>IMAT API Documentation</title>
+  <style>
+  * {
+    box-sizing: border-box;
+  }
+
+  .body {
+    font: 14px verdana;
+    margin: 0;
+    padding: 5px;
+  }
+
+  code {
+    background-color: #ddd;
+    border-radius: 4px;
+    display: inline-block;
+    margin: -2px 0;
+    padding: 2px 4px;
+  }
+
+  blockquote {
+    background-color: #EED;
+    border-left: 4px solid #AA9;
+    margin: 0;
+    padding: 8px 16px;
+  }
+
+  blockquote:first-child {
+    margin: 4px 0 0;
+  }
+
+  blockquote > p {
+    margin: 1px 0;
+  }
+
+  label {
+    color: #778;
+    display: block;
+    font-weight: bold;
+    margin: 8px;
+  }
+
+  .api-group {
+    background-color: #fff;
+    color: #000;
+    position: relative;
+    max-width: 1000px;
+  }
+
+  .api-group--url {
+    font-family: "Courier New",Courier,monospace;
+  }
+
+  .api-group[closed] > :not(.api-group--title),
+  .endpoint[closed] > :not(.endpoint-header) {
+    display: none;
+  }
+
+  .opener {
+    background-color: #999;
+    border: 1px solid #777;
+    border-radius: 50%;
+    display: inline-block !important;
+    font-weight: bold;
+    height: 25px;
+    outline: none;
+    padding: 0;
+    position: absolute;
+    right: 10px;
+    text-align: center;
+    top: 5px;
+    transform: rotate(90deg);
+    vertical-align: middle;
+    width: 25px;
+    will-change: transform;
+  }
+
+  [closed] .opener {
+    transform: rotate(0deg);
+  }
+
+  .api-group--title {
+    background-color: #CCD;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+
+  .api-group--desc:not(:empty) {
+    border: 2px solid #CCD;
+    margin: -8px 0px 6px;
+    padding: 8px 8px 0;
+  }
+
+  .endpoint {
+    margin: 3px 0px;
+    position: relative;
+  }
+
+  .endpoint-header {
+    cursor: pointer;
+    padding: 5px 10px;
+    background: rgba(204,204,221,.5)
+  }
+
+  .endpoint-header:hover {
+    background: rgb(204,204,221)
+  }
+
+  .endpoint-spacer {
+    height: 16px;
+  }
+
+  .endpoint > span {
+    font-size: 18px;
+    padding: 4px 8px 4px 0;
+  }
+
+  .endpoint-source {
+    background-color: #F8F8F8;
+    margin: 8px 0;
+    padding: 4px;
+  }
+
+  .endpoint-method {
+    font-weight: bold;
+    width: 60px;
+  }
+
+  .endpoint-url {
+    font-weight: bold;
+  }
+
+  .endpoint-title {
+    padding-left: 8px;
+  }
+
+  .endpoint-title > p,
+  .example-title > p {
+    display: inline;
+  }
+
+  .endpoint-stability {
+    background: rgb(170,170,170);
+    border-radius: 12px;
+    color: white;
+    display: inline-block;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 20px;
+    padding: 4px 8px;
+  }
+
+  .stability-prod {
+    background: green;
+  }
+
+  .stability-beta {
+    background: rgb(210, 190, 0);
+  }
+
+  .stability-deprecated {
+    background: rgb(210, 50, 70);
+  }
+
+  .endpoint-details {
+    margin: 4px 0 12px 16px;
+  }
+
+  .endpoint-params {
+    border-collapse: collapse;
+    margin: 4px 0px 32px 16px;
+    width: calc(100%-32px);
+  }
+
+  .endpoint-params th,
+  .endpoint-params td {
+    border: 1px solid #889;
+    margin: 0;
+    padding: 8px 16px;
+  }
+
+  .endpoint-params th {
+    background-color: #f5f5f5;
+    border-bottom-width: 3px;
+  }
+
+  .endpoint-params tr:hover {
+    background-color: #f0f0f0;
+  }
+
+  .endpoint-param--header {
+    background-color: #FFFFE0;
+  }
+
+  .endpoint-param--cookie {
+    background-color: #FFE0FF;
+  }
+
+  .endpoint-param--path {
+    background-color: #FFE0E0;
+  }
+
+  .endpoint-param--query {
+    background-color: #E0FFE0;
+  }
+
+  .endpoint-param--body {
+    background-color: #FFF;
+  }
+
+  .param-name {
+    font-weight: bold;
+  }
+  .param-name[optional] {
+    padding-right: 62px;
+    position: relative;
+  }
+
+  .param-name[optional]::after {
+    background-color: #282;
+    border-radius: 4px;
+    color: #fff;
+    content: 'optional';
+    font-size: 10px;
+    font-weight: normal;
+    padding: 2px 4px;
+    position: absolute;
+    right: 2px;
+    top: 2px;
+  }
+
+  .param-type {
+    font-style: italic;
+  }
+
+  [class*="method-"] {
+    background-color: #777;
+    border-radius: 3px;
+    color: #FFF;
+    display: inline-block;
+    padding: 4px 8px;
+  }
+
+  .method-put {
+    background-color: #993;
+  }
+
+  .method-post {
+    background-color: #939;
+  }
+
+  .method-patch {
+    background-color: #33B;
+  }
+
+  .method-delete {
+    background-color: #955;
+  }
+
+  .permissions-value {
+    display: inline-block;
+    margin: 0 0 8px 16px;
+  }
+
+  .examples {
+    margin: 8px;
+  }
+
+  .examples:before {
+    content: 'Examples:';
+    color: #778;
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 16px 0 8px 0;
+  }
+
+  .example {
+    align-content: stretch;
+    align-items: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .example-request,
+  .example-response {
+    align-content: stretch;
+    align-items: stretch;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 370px;
+    width: 49%;
+  }
+
+  @media screen and (max-width: 790px) {
+    .example-request {
+      width: 100%;
+    }
+    .example-response {
+      border-bottom: 2px solid #9996;
+      margin-bottom: 16px;
+      width: 100%;
+    }
+  }
+
+  .example-title {
+    flex-grow: 0;
+    font-weight: bold;
+  }
+
+  .example-code {
+    background-color: #110;
+    border-radius: 6px;
+    color: white;
+    flex-grow: 2;
+    font-size: 16px;
+    max-height: 350px;
+    min-height: 100px;
+    min-width: 365px;
+    overflow: auto;
+    padding: 6px;
+  }
+
+  td > p {
+    margin: 4px 0;
+  }
+  </style>
+  <style media="print">
+  .example-code {
+    max-height: none;
+  }
+  </style>
+</head>
+<body class="body">
+  <%- pageDocs %>
+  <script>
+  function toggleClosed(el) {
+    if (el.hasAttribute('closed')) {
+      el.removeAttribute('closed');
+    }
+    else {
+      el.setAttribute('closed','');
+    }
+  }
+
+  function handleClick(el) {
+    let e = el.target ? el : window.event;
+    el = el || e.target;
+    e.preventDefault();
+    toggleClosed(el.parentNode);
+  }
+  </script>
+</body>
+</html>

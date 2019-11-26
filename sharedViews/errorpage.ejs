@@ -1,0 +1,109 @@
+<%
+_layoutFile = false;
+%><!doctype html>
+<html>
+<head>
+  <title><%=title%></title>
+  <link rel="shortcut icon" type="image/x-icon" href="/brand/img/favicon.ico">
+  <style>
+  body {
+    font-family: Segoe UI Semibold;
+    padding: 8px 0;
+  }
+  .homelink {
+    text-decoration: none;
+  }
+  .homelink > img {
+    box-sizing: border-box;
+    display: inline-block;
+    padding: 0 12px;
+    width: 188px;
+  }
+  .status {
+    background-color: #00ade2;
+    box-sizing: border-box;
+    color: White;
+    display: inline-block;
+    font-size: 2.5em;
+    height: 100px;
+    margin: 0 188px;
+    padding: 0;
+    position: relative;
+    vertical-align: middle;
+    width: calc(100% - 376px);
+  }
+  .status:before,
+  .status:after {
+    background-color: #00235d;
+    content: '';
+    display: inline-block;
+    height: 100px;
+    margin: 0;
+    position: absolute;
+    vertical-align: middle;
+    width: 180px;
+  }
+  .status:before {
+    left: -188px;
+  }
+  .status:after {
+    right: -188px;
+  }
+  .status span {
+    display: inline-block;
+    margin: 21px 32px;;
+  }
+  .title {
+    color: #00235d;
+    font-size: 1.75em;
+    margin: 8px 0 8px 188px;
+    vertical-align: middle;
+  }
+  .title:before,
+  .message:before,
+  .message:after {
+    content: '';
+    display: inline-block;
+    height: 75px;
+    margin-right: 32px;
+    vertical-align: middle;
+    width: 150px;
+  }
+  .title:before {
+    background-color: #00ade2;
+  }
+  .message {
+    color: #00ade2;
+    font-size: 1.5em;
+    margin: 8px 0 8px 188px;
+    vertical-align: middle;
+  }
+  .message:before {
+    background-color: #00235d;
+  }
+  .message:after {
+    background-color: #e51b24;
+    display: block;
+    margin-top: 8px;
+  }
+  .data {
+    margin-left: 190px;
+  }
+  .stack {
+    margin-left: 190px;
+    font: 10pt Courier;
+    white-space: pre-wrap;
+  }
+  </style>
+</head>
+<body>
+  <div>
+    <a class="homelink" href="/"><img src="/brand/img/logo.svg"/></a>
+  </div>
+  <div class="status"><span>Error <%=status%></span></div>
+  <p class="title"><%=title%></p>
+  <p class="message"><%=message%></p>
+  <p class="data"><%=data%></p>
+  <p class="stack"><%=stack%></p>
+</body>
+</html>

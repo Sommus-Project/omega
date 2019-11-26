@@ -1,0 +1,40 @@
+<%
+  // Get ngApp if any
+  var ngApp = page.ngApp?` ng-app="${page.ngApp}"`:'';
+
+  if (page.meta && !Array.isArray(page.meta)) {
+    throw new Error('page.meta must either be undefined or an Array.');
+  }
+
+  // Add page description, if any
+  if (page.description) {
+    page.meta = page.meta || [];
+    page.meta.unshift({name:'description',content:page.description});
+  }
+
+  // Set body attributes, if any
+  var bodyAttrs = '';
+  if (typeof page.bodyAttrs === 'object') {
+    bodyAttrs = ' '+(Object.keys(page.bodyAttrs).map(key => `${key}="${page.bodyAttrs[key]}"`).join(' '));
+  }
+
+  var favicon = page.favicon || defaultFavicon;
+
+  var assetList = calcAssets(assets);
+%><!DOCTYPE html>
+<html<%-ngApp%> lang="<%-locale%>">
+<head>
+  <meta name="locale" content="<%-locale%>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="msapplication-config" content="none">
+  <%-process.meta(page.meta)%>
+  <title><%-page.title%> - <%-appName%></title>
+  <style>.hide-on-load{display:none;}</style>
+  <link rel="icon" id="favicon" type="image/x-icon" href="<%-favicon%>"><%-process.styles(assetList.css.head,2)+process.scripts(assetList.script.head, 2, true)%>
+</head>
+<body<%-bodyAttrs%>><%-body%>  <div contains="styles"><%-process.styles(assetList.css.body,4)%>
+  </div>
+  <div contains="scripts"><%-process.scripts(assetList.script.body,4)%>
+  </div>
+</body>
+</html>

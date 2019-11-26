@@ -1,0 +1,56 @@
+<%
+page = {
+  bodyAttrs: {},
+  title: 'IMAT System NPM Page',
+  description: 'IMAT System NPM Page',
+  favicon: '/brand/img/favicon.ico'
+};
+assets = {
+  head: {
+    js: [],
+    css: []
+  },
+  js: [],
+  css: []
+};
+%>
+  <style>
+  table {
+    border-collapse: collapse;
+  }
+
+  th, td {
+    border: 1px solid #444;
+    padding: 4px;
+    text-align: center;
+  }
+
+  th {
+    background-color: #444;
+    color: #fff;
+    font-weight: bold;
+  }
+
+  tbody tr:nth-child(3n) td {
+    background-color: #EEE;
+  }
+  </style>
+  <h1>IMAT NPM Module information</h1>
+  <a href="/system">Back to system homepage</a>
+  <hr/>
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>Repo</th>
+        <th>Version</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%- npmInfo.map((info, idx) => `<tr>
+        <td>${idx+1}</td>
+        <td><a href="${info.url}" target="_blank">${info.repo}</a></td>
+        <td>${info.version}</td>
+      </tr>`).join('\n   ') %>
+    </tbody>
+  </table>
