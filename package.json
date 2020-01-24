@@ -1,6 +1,6 @@
 {
   "name": "@sp/omega",
-  "version": "4.0.2",
+  "version": "0.0.1",
   "main": "app.js",
   "author": "IMAT Solutions <software@imatsolutions.com>",
   "contributors": [
@@ -13,7 +13,7 @@
   "description": "Omega is the application framework for Node based apps. It provides a majority of the initialization requiring your app to provide minimal views, routing and API functionality.",
   "homepage": "https://github.com/Sommus-Project/omega/blob/master/README.md",
   "engines": {
-    "node": "10.15.0"
+    "node": "12.6.0"
   },
   "repository": {
     "type": "git",
@@ -33,7 +33,7 @@
     "test-mocha": "nyc --nycrc-path test/.nycrc-mocha.json ./node_modules/.bin/_mocha \"lib/**/*.mocha.js\""
   },
   "dependencies": {
-    "@sp/omegalib": "git+https://github.com/Sommus-Project/omega-lib.git",
+    "@sp/omega-lib": "git+https://github.com/Sommus-Project/omega-lib.git",
     "@webcomponents/custom-elements": "^1.3.1",
     "@webcomponents/template": "^1.4.1",
     "body-parser": "^1.18.3",
@@ -54,7 +54,7 @@
     "surface": "git+https://github.com/mildrenben/surface.git"
   },
   "devDependencies": {
-    "@sp/omegatools": "git+https://github.com/Sommus-Project/omega-tools.git",
+    "@sp/omega-tools": "git+https://github.com/Sommus-Project/omega-tools.git",
     "chai": "^4.2.0",
     "eslint": "^6.6.0",
     "less": "^3.10.3",
