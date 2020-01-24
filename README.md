@@ -26,13 +26,13 @@ npm init
 When your folder is set up you first need to install OmegaTools:
 
 ```bash
-npm install --save-dev git+https://github.com/IMAT-Solutions/omega-tools.git
+npm install --save-dev git+https://github.com/Sommus-Project/omega-tools.git
 ```
 
 Then you install Omega:
 
 ```bash
-npm install --save git+https://github.com/IMAT-Solutions/omega.git
+npm install --save git+https://github.com/Sommus-Project/omega.git
 ```
 
 ### Create your app
@@ -295,7 +295,7 @@ http://localhost:3000/myapi/users/:uid/properties/:propid
 
 More information about writing API Files can be [found in apifiles.md](docs/apifiles.md)
 
-Information about using the Omega API tool can be found in the [Omega-Tools README.md file](https://github.com/IMAT-Solutions/omega-tools/blob/master/README.md#omegaapi)
+Information about using the Omega API tool can be found in the [Omega-Tools README.md file](https://github.com/Sommus-Project/omega-tools/blob/master/README.md#omegaapi)
 
 ### Library Functions
 
