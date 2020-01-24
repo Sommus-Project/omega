@@ -33,7 +33,7 @@
     "test-mocha": "nyc --nycrc-path test/.nycrc-mocha.json ./node_modules/.bin/_mocha \"lib/**/*.mocha.js\""
   },
   "dependencies": {
-    "@imat/omegalib": "git+https://github.com/IMAT-Solutions/omega-lib.git#v2.0.5",
+    "@imat/omegalib": "git+https://github.com/IMAT-Solutions/omega-lib.git",
     "@webcomponents/custom-elements": "^1.3.1",
     "@webcomponents/template": "^1.4.1",
     "body-parser": "^1.18.3",
@@ -54,7 +54,7 @@
     "surface": "git+https://github.com/mildrenben/surface.git"
   },
   "devDependencies": {
-    "@imat/omegatools": "git+https://github.com/IMAT-Solutions/omega-tools.git#v2.1.12",
+    "@imat/omegatools": "git+https://github.com/IMAT-Solutions/omega-tools.git",
     "chai": "^4.2.0",
     "eslint": "^6.6.0",
     "less": "^3.10.3",
