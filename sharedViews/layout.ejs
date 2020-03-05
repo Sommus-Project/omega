@@ -1,34 +1,56 @@
 <%
   // Get ngApp if any
-  var ngApp = page.ngApp?` ng-app="${page.ngApp}"`:'';
+  const ngApp = page.ngApp ? ` ng-app="${page.ngApp}"` : '';
+  const favicon = page.favicon || defaultFavicon;
+  const ogType = page.type || 'website';
+  const meta = (Array.isArray(page.meta)) ? page.meta : [];
+  const title = page.title || '';
+  locale = page.locale || locale;
 
-  if (page.meta && !Array.isArray(page.meta)) {
-    throw new Error('page.meta must either be undefined or an Array.');
+  // https://ogp.me/
+  // * og:locale, ot:type, og:title, og:description, og:site_name, og:image, og:video
+  // + og:url
+  // ? og:locale:alternate, og:audio
+  meta.push({name:'locale', content:locale});
+  meta.push({name:'viewport', content:'width=device-width, initial-scale=1.0'});
+  meta.push({name:'msapplication-config', content:'none'});
+  meta.push({name:'og:title',content:`${appName} | ${page.title}`});
+  meta.push({name:'og:locale',content:locale});
+  meta.push({name:'og:type',content:ogType});
+  meta.push({name:'og:site_name',content:appName});
+
+  if (Array.isArray(page.images)) {
+    page.images.forEach(image => meta.push({name:'og:image',content:image}));
   }
-
+  if (Array.isArray(page.videos)) {
+    page.videos.forEach(video => meta.push({name:'og:video',content:video}));
+  }
+  
   // Add page description, if any
   if (page.description) {
-    page.meta = page.meta || [];
-    page.meta.unshift({name:'description',content:page.description});
+    meta.push({name:'description',content:page.description});
+    meta.push({name:'og:description',content:page.description});
   }
 
   // Set body attributes, if any
-  var bodyAttrs = '';
+  let bodyAttrs = '';
   if (typeof page.bodyAttrs === 'object') {
     bodyAttrs = ' '+(Object.keys(page.bodyAttrs).map(key => `${key}="${page.bodyAttrs[key]}"`).join(' '));
   }
 
-  var favicon = page.favicon || defaultFavicon;
-
-  var assetList = calcAssets(assets);
+  const assetList = calcAssets(assets);
+  /*
+  Step 1: Include the JavaScript SDK on your page once, ideally right after the opening body tag.
+  <div id="fb-root"></div>
+  <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v6.0"></script>
+  Step 2: Place this code wherever you want the plugin to appear on your page.
+  <div class="fb-like" data-href="https://www.footballs.com" data-width="" data-layout="standard" data-action="like" data-size="small" data-share="true"></div>
+  */
 %><!DOCTYPE html>
-<html<%-ngApp%> lang="<%-locale%>">
+<html<%-ngApp%> prefix="og: http://ogp.me/ns#" lang="<%-locale%>">
 <head>
-  <meta name="locale" content="<%-locale%>">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="msapplication-config" content="none">
-  <%-process.meta(page.meta)%>
-  <title><%-page.title%> - <%-appName%></title>
+  <%-process.meta(meta)%>
+  <title><%-title%> - <%-appName%></title>
   <style>.hide-on-load{display:none;}</style>
   <link rel="icon" id="favicon" type="image/x-icon" href="<%-favicon%>"><%-process.styles(assetList.css.head,2)+process.scripts(assetList.script.head, 2, true)%>
 </head>

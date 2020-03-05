@@ -2,6 +2,7 @@
 
 | Date | Author | Ver | Description |
 | - | - | - | - |
+| 2020-03-04 | Mike Collins | 0.0.3 | * Added "og" meta tags for Facebook, Twitter, etc.
 | 2020-02-27 | Mike Collins | 0.0.2 | * Updated Rest to use a buffer to allow image and binary downloads<br/>* Updated dependencies |
 | 2019-11-25 | Mike Collins | 4.0.2 | * (PS-1296) Corrected `requestId` to be `requestID` in the usage logs.<br/>* Updating Version<br/>* Updated dependencies<br/>* Updating UPDATES.md |
 | 2019-11-11 | Mike Collins | 4.0.1 | * Adding `X-Forwarded-Host` header<br/>* Updating Version<br/>* Updating UPDATES.md |
