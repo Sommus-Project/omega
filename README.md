@@ -1,6 +1,6 @@
 # OMEGA
 
-Omega is a Node.js application framework for building Web based applications.
+Omega is a Node.js application framework for building Web based applications and REST APIs.
 
 > Since it is a Node.js framework you will need to install Node.js to use it.
 
