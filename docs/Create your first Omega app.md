@@ -45,6 +45,22 @@ Now you need to start your app.
 npm run start
 ```
 
+You can also have Omega watch for changes in your app and auto-build. If the build requires node to restart Omega does that too.
+
+During the time that Omega is watching your app you can use the following keys:
+
+`c` - Clear the terminal screen
+
+`d` - Toggle between debugging your app andjust running your app.
+
+`r` - Restart node.
+
+To have Omega watch your app run:
+
+```bash
+npm run watch
+```
+
 ### View your app
 
 Open a Web Browser to `http://localhost:3000/system/node/npm`. The browser should auto redirect to `https://localhost:3001/system/node/npm` and will likely bring up a warning about invalid certificates or an insecure site. Just accept the certificates or allow the page to load and view the real page.
