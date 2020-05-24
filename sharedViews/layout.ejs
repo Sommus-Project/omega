@@ -25,7 +25,7 @@
   if (Array.isArray(page.videos)) {
     page.videos.forEach(video => meta.push({name:'og:video',content:video}));
   }
-  
+
   // Add page description, if any
   if (page.description) {
     meta.push({name:'description',content:page.description});

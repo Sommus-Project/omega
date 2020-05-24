@@ -1,6 +1,6 @@
-<%
+<!--<%
 _layoutFile = false;
-%><!doctype html>
+%>--><!doctype html>
 <html>
 <head>
   <title><%=title%></title>
@@ -20,77 +20,38 @@ _layoutFile = false;
     width: 188px;
   }
   .status {
-    background-color: #00ade2;
+    background-color: #454589;
     box-sizing: border-box;
     color: White;
     display: inline-block;
     font-size: 2.5em;
     height: 100px;
-    margin: 0 188px;
+    margin: 0;
     padding: 0;
     position: relative;
     vertical-align: middle;
     width: calc(100% - 376px);
-  }
-  .status:before,
-  .status:after {
-    background-color: #00235d;
-    content: '';
-    display: inline-block;
-    height: 100px;
-    margin: 0;
-    position: absolute;
-    vertical-align: middle;
-    width: 180px;
-  }
-  .status:before {
-    left: -188px;
-  }
-  .status:after {
-    right: -188px;
   }
   .status span {
     display: inline-block;
     margin: 21px 32px;;
   }
   .title {
-    color: #00235d;
+    color: #232345;
     font-size: 1.75em;
-    margin: 8px 0 8px 188px;
+    margin: 8px 0;
     vertical-align: middle;
-  }
-  .title:before,
-  .message:before,
-  .message:after {
-    content: '';
-    display: inline-block;
-    height: 75px;
-    margin-right: 32px;
-    vertical-align: middle;
-    width: 150px;
-  }
-  .title:before {
-    background-color: #00ade2;
   }
   .message {
     color: #00ade2;
     font-size: 1.5em;
-    margin: 8px 0 8px 188px;
+    margin: 8px 0;
     vertical-align: middle;
   }
-  .message:before {
-    background-color: #00235d;
-  }
-  .message:after {
-    background-color: #e51b24;
-    display: block;
-    margin-top: 8px;
-  }
   .data {
-    margin-left: 190px;
+
   }
   .stack {
-    margin-left: 190px;
     font: 10pt Courier;
     white-space: pre-wrap;
   }
