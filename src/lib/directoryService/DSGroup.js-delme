@@ -1,0 +1,31 @@
+/*
+const _private = new WeakMap();
+const NO_SET_IN_BASE = 'Can not set values in the base object.';
+
+class DSGroup {
+  constructor() {
+    const initialDate = new Date(0);
+    const initialState = {
+    }
+    _private.set(this, initialState);
+  }
+
+  init(provider) {
+    const p = _private.get(this);
+    if (p.username !== uid) {
+      throw new Error(`User object incorrectly instantiated. '${p.username}' should have been '${uid}'`);
+    }
+
+    p.provider = provider;
+  }
+
+  static initFromObj(dsGroup, groupInfo) {
+    const p = _private.get(dsGroup);
+    if (p) {
+      Object.entries(groupInfo).forEach(([key, value]) => p[key] = value);
+    }
+  }
+}
+
+module.exports = DSGroup;
+*/

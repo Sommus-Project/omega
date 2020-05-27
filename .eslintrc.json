@@ -4,29 +4,20 @@
     "sourceType": "module"
   },
   "plugins": [
+    "omega"
   ],
   "env": {
     "es6": true,
     "node": true,
     "browser": true
   },
+  "root": true,
   "rules": {
-    "complexity": [
-      "warn",
-      {
-        "max": 10
-      }
-    ],
-    "curly": [
-      "warn",
-      "multi-line"
-    ],
+    "complexity": ["warn", {"max": 10}],
+    "curly": ["warn", "multi-line"],
     "default-case": "warn",
     "dot-notation": "warn",
-    "eqeqeq": [
-      "warn",
-      "smart"
-    ],
+    "eqeqeq": ["warn", "smart"],
     "guard-for-in": "warn",
     "no-alert": "error",
     "no-caller": "error",
@@ -75,17 +66,8 @@
     "no-with": "error",
     "prefer-promise-reject-errors": "warn",
     "radix": "error",
-    "wrap-iife": [
-      "warn",
-      "any"
-    ],
-    "yoda": [
-      "error",
-      "never",
-      {
-        "onlyEquality": true
-      }
-    ],
+    "wrap-iife": ["warn", "any"],
+    "yoda": ["error", "never", {"onlyEquality": true}],
     "comma-dangle": "error",
     "no-cond-assign": "error",
     "no-console": "off",
@@ -126,11 +108,6 @@
     "no-undef-init": "error",
     "no-undefined": "off",
     "no-unused-vars": "warn",
-    "no-use-before-define": [
-      "error",
-      {
-        "functions": false
-      }
-    ]
+    "no-use-before-define": ["error", {"functions": false}]
   }
 }

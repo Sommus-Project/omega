@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<script>
+//https://polyfill.io/v2/docs/
+//**********************************************************
+// When changes are made you MUST modify the version number
+// in the file lib/getBrowserNeeds.js
+//**********************************************************
+var w = window;
+var n = Number;
+var sp = String.prototype;
+var a = Array;
+var ap = Array.prototype;
+var o = Object;
+var needs = {
+  custEl: w.customElements?undefined:1 // IE, Edge 18-, Firefox 62-, Safari 10-, others
+};
+
+if (
+  n.isNaN == null ||
+  n.isFinite == null ||
+  n.isInteger == null ||
+  n.isSafeInteger == null ||
+  n.parseFloat == null ||
+  n.parseInt == null
+) {
+  needs.number = 1;  // IE11- and other old browsers
+}
+needs.afind = ap.find?undefined:1; //IE11 Array.find and Array.findIndex
+needs.afrom = a.from?undefined:1; //IE11 Array.from
+needs.assign = o.assign?undefined:1;  // IE11
+needs.custEvt = (typeof w.CustomEvent === "function")?undefined:1; // IE11
+needs.promise = w.Promise?undefined:1; // IE11-, Safari 7- and other older browsers
+needs.fetch = w.fetch?undefined:1; // IE11-, Edge13-, Safari 10- and other real old browsers
+needs.entries = o.entries?undefined:1; // IE11-, Safari 10- and other real old browsers
+needs.values = o.values?undefined:1; // IE11-, Safari 10- and other real old browsers
+if ( sp.endsWith == null || sp.includes == null || sp.repeat == null || sp.startsWith == null
+) {
+  needs.string = 1;  // IE11-, Safari 9- and other real old browsers
+}
+if (sp.padEnd == null || sp.padStart == null) {
+  needs.strpad = 1;  // IE11-, Edge14-, Safari 10- and other old browsers
+}
+
+function setCookie() {
+  document.cookie = "browserNeeds="+escape(JSON.stringify(needs))+";path=/";
+  w.location.reload();
+}
+</script>
+<script type="module">
+  needs.module = 'mjs';   // This browser supports <script type="module"> -  Edge 16+, Firefox 60+, Chrome 61+, Safari 11+
+  setCookie();
+</script>
+<script nomodule>
+  // This browser DOES NOT support <script type="module">
+  try {
+    eval('"use strict"; class foo {}');
+    needs.module = 'cjs'; // This browser supports class
+  }
+
+  catch(_) {
+    needs.module = 'cjs5'; // This browsers does not support `class`: IE11 and real old browsers.
+  }
+  setCookie();
+</script>
+</body>
+</html>

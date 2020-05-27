@@ -1,0 +1,10 @@
+{
+  "devBuild": true,
+  "root": "src",
+  "nodeFiles": [
+    "app.js",
+    "api/**/*",
+    "lib/**/*",
+    "routes/**/*"
+  ]
+}

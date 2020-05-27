@@ -1,13 +1,13 @@
 {
   "filestocopy": {
-    "node_modules/surface/docs/css/surface_styles.css": "static/css/md.css",
-    "node_modules/@webcomponents/custom-elements/custom-elements.min.js": "static/js/polyfill/custom-elements.min.js",
-    "node_modules/@webcomponents/template/template.js": "static/js/polyfill/template.js",
-    "src/**/*.*": "static/:1"
+    "node_modules/surface/docs/css/surface_styles.css": "dist/static/css/md.css",
+    "node_modules/@webcomponents/custom-elements/custom-elements.min.js": "dist/static/js/polyfill/custom-elements.min.js",
+    "node_modules/@webcomponents/template/template.js": "dist/static/js/polyfill/template.js",
+    "src/**/!(*.mocha).*": "dist/:1"
   },
   "minify": {
     "js": [
-      "static/js/**/!(*.min).js"
+      "dist/static/js/**/!(*.min).js"
     ]
   }
 }
