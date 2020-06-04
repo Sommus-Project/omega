@@ -226,8 +226,6 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
           req.sessionManager.touchSession(req.sessionId);
         }
 
-        console.log(handler.description && handler.description.requestParams);
-
         // Setup the values being passed in through the URL and Posted data
         const params = {data: req.body, ...req.params, req};
 

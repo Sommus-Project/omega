@@ -1,3 +1,4 @@
+/* eslint-disable */
 /*
 Inject
 Copyright 2013 LinkedIn

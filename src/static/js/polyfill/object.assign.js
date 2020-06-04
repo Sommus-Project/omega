@@ -1,3 +1,4 @@
+/* eslint-disable */
 if (!Object.assign) {
   Object.defineProperty(Object, "assign", {
     // .length of the .assign function must be 2

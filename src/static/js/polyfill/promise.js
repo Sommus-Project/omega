@@ -1,7 +1,7 @@
+/* eslint-disable */
 //
 // Check for native Promise and it has correct interface
 //
-
 var NativePromise = window.Promise;
 var nativePromiseSupported =
   NativePromise &&

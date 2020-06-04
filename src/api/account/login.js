@@ -70,6 +70,7 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
     if (thereIsANextStep) {
       const step = 'Do the next step';
       headers['X-Next-Step'] = step;
+      console.log('Next Step: returning a 401');
       return new HttpError(401, {
         data: { code: 0, reason: step },
         headers
@@ -77,7 +78,19 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
     }
 
     const user = await ds.getUser(username);
-    return new HttpResponse(headers, user);
+    let status = 200;
+    if (user.locked || user.disabled) {
+      status = 401;
+      const reasons = [];
+      if (user.locked) {
+        reasons.push('LOCKED');
+      }
+      if (user.disabled) {
+        reasons.push('DISABLED');
+      }
+      headers['X-Reason'] = reasons.join(',');
+    }
+    return new HttpResponse(headers, user.toJSON(), status);
   }
 
   catch (ex) {
@@ -87,7 +100,7 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
       return new HttpError(500, ex.message);
     }
 
-    req.usageLog.info(`401 Error - ${ex.subCode}:${ex.message}`);
+    req.usageLog.info(`401 Error - ${ex.message}`);
     return new HttpError(401, {
       data: {
         code: ex.code,

@@ -1,3 +1,4 @@
+/* eslint-disable */
 Object.defineProperty(Array.prototype, 'includes', { // eslint-disable-line no-extend-native
   value: function(valueToFind, fromIndex) {
     if (this == null) {

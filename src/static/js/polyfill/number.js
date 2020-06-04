@@ -1,3 +1,4 @@
+/* eslint-disable */
 if (Number.isFinite == null) {
   Object.defineProperty(Number, 'isFinite', { // eslint-disable-line no-extend-native
     value: function(value) {

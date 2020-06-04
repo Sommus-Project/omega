@@ -25,7 +25,7 @@
     "clean": "omega rm static coverage .nyc_output dist",
     "build-files": "omega build",
     "debug-mocha": "node --inspect-brk node_modules/mocha/bin/_mocha --reporter tap \"src/lib/**/*.mocha.js\"",
-    "lint": "eslint \"./src/api/**/*.js\" \"./src/lib/**/*.js\" \"./src/routes/**/*.js\" \"./src/*.js\" index.js",
+    "lint": "eslint \"src/**/*.js\" index.js",
     "postinstall": "npm run build-files",
     "start": "node dist/app",
     "test": "npm run lint && npm run test-mocha",

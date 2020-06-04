@@ -1,3 +1,4 @@
+/* eslint-disable */
 (function() {
   var support = {
     searchParams: 'URLSearchParams' in window,

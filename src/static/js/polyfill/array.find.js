@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 Object.defineProperty(Array.prototype, 'find', { // eslint-disable-line no-extend-native
   value: function find(predicate) {
     if (this == null) {

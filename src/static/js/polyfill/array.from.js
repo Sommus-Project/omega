@@ -1,3 +1,4 @@
+/* eslint-disable */
 (function () {
   const maxSafeInteger = Math.pow(2, 53) - 1;
 

@@ -6,17 +6,15 @@ class DSUser {
     const initialDate = new Date(0);
     const initialState = {
       disabled: true,
-      dn: '',
-      gidNumber: 0,
+      email: '',
+      firstname: '',
       groups: [],
+      id: 0,
       lastLogin: initialDate,
+      lastname: '',
       locked: true,
-      modifiable: false,
-      name: '',
-      passwordAllowChangeTime: initialDate,
       passwordExpirationTime: initialDate,
       passwordRetryCount: 0,
-      passwordExpWarned: false,
       provider: '',
       removable: false,
       username: ''
@@ -36,12 +34,20 @@ class DSUser {
     return _private.get(this).disabled;
   }
 
-  get dn() {
-    return _private.get(this).dn;
+  get email() {
+    return _private.get(this).email;
+  }
+
+  get firstname() {
+    return _private.get(this).firstname;
   }
 
   get groups() {
     return [..._private.get(this).groups];
+  }
+
+  get id() {
+    return _private.get(this).id;
   }
 
   init(uid, provider = 'default') {
@@ -64,20 +70,12 @@ class DSUser {
     return _private.get(this).lastLogin;
   }
 
+  get lastname() {
+    return _private.get(this).lastname;
+  }
+
   get locked() {
     return _private.get(this).locked;
-  }
-
-  get modifiable() { // Read Only
-    return _private.get(this).modifiable;
-  }
-
-  get name() {
-    return _private.get(this).name;
-  }
-
-  get passwordAllowChangeTime() {
-    return _private.get(this).passwordAllowChangeTime;
   }
 
   get passwordExpirationTime() {
@@ -85,11 +83,7 @@ class DSUser {
   }
 
   get passwordExpired() { // Derived/Read Only
-    return (_private.get(this).passwordExpired.valueOf() < Date.now());
-  }
-
-  get passwordExpWarned() {
-    return _private.get(this).passwordExpWarned;
+    return (_private.get(this).passwordExpirationTime.valueOf() < Date.now());
   }
 
   get passwordRetryCount() {
@@ -104,11 +98,23 @@ class DSUser {
     return _private.get(this).removable;
   }
 
+  get username() { // Readonly
+    return _private.get(this).username;
+  }
+
   async setDisabled(disabled) {
     _private.get(this).disabled = disabled;
     if (disabled) {
       await clearSession(this.username, this.provider);
     }
+  }
+
+  async setEmail(email) {
+    _private.get(this).email = email;
+  }
+
+  async setFirstname(firstname) {
+    _private.get(this).firstname = firstname;
   }
 
   async setGroups(groups) {
@@ -118,8 +124,16 @@ class DSUser {
     _private.get(this).groups = [...groups];
   }
 
+  async setId(id) {
+    throw new Error(NO_SET_IN_BASE); // You MUST override id and not call super.setId();
+  }
+
   async setLastLogin(date) { // Only called by SSO?
-    _private.get(this).lastLogin = date;
+    throw new Error(NO_SET_IN_BASE); // You MUST override lastLogin and not call super.setLastLogin();
+  }
+
+  async setLastame(lastname) {
+    _private.get(this).lastname = lastname
   }
 
   async setLocked(locked) {
@@ -129,16 +143,8 @@ class DSUser {
     }
   }
 
-  async setName(name) {
-    _private.get(this).name = name
-  }
-
   async setPassword(/*password, oldPassword*/) { // Write Only
     throw new Error(NO_SET_IN_BASE); // You MUST override setPassword and not call super.setPassword();
-  }
-
-  async setPasswordAllowChangeTime(date = new Date()) {
-    _private.get(this).passwordAllowChangeTime = date;
   }
 
   async setPasswordExpirationTime(date) {
@@ -148,24 +154,16 @@ class DSUser {
     }
   }
 
-  async setPasswordExpWarned(warned) {
-    _private.get(this).passwordExpWarned = warned;
-  }
-
   async setpasswordRetryCount(retries) {
     _private.get(this).passwordRetryCount = retries;
   }
 
   toJSON() {
     const p = _private.get(this);
-    const { disabled, locked, modifiable, name, provider, removable, username, passwordExpired } = p;
+    const { disabled, email, firstname, id, lastname, locked, provider, removable, username } = p;
     const groups = [...p.groups];
 
-    return { disabled, groups, locked, modifiable, name, provider, removable, username, passwordExpired };
-  }
-
-  get username() { // Readonly
-    return _private.get(this).username;
+    return { disabled, email, firstname, groups, id, lastname, locked, provider, removable, username, passwordExpired: this.passwordExpired };
   }
 }
 
@@ -176,5 +174,4 @@ async function clearSession(username, provider) {
 }
 
 DSUser.purgeSession = null;
-
 module.exports = DSUser;

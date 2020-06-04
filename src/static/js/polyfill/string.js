@@ -1,3 +1,4 @@
+/* eslint-disable */
 if (String.prototype.endsWith == null) {
     Object.defineProperty(String.prototype, 'endsWith', { // eslint-disable-line no-extend-native
         value: function endsWith(search, this_len) {

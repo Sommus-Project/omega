@@ -1,3 +1,4 @@
+/* eslint-disable */
 if (String.prototype.padEnd == null) {
   Object.defineProperty(String.prototype, 'padEnd', { // eslint-disable-line no-extend-native
     value: function padEnd(targetLength,padString) {
