@@ -176,7 +176,8 @@ function apiDocs(config) {
     let pageNav = '';
     let pageDocs = '';
 
-    const name = path.join(config.apiFolder, 'apidocs.json');
+    // TODO: Handle the combination of all docs based on the array config.folders
+    const name = path.join(config.folders[0], 'apidocs.json');
     const json = loadJsonFile(name);
     if (json == null) {
       throw new Error('Unable to generate API file. The API descriptor file `apidocs.json` was not found.');

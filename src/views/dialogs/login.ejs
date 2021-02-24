@@ -1,0 +1,46 @@
+<dialog class="dialog" id="loginDialog">
+  <div class="dialog_title">Log in</div>
+  <div class="dialog_body">Enter your username and password to log in.
+    <form class="dialog_form">
+      <label>Username:
+        <input type="text" name="username" class="dialog-input" autofocus />
+      </label>
+
+      <label>Password:
+        <input type="text" name="password" class="dialog-input" />
+      </label>
+
+      <button type="button" class="dialog-button" dialog-action="submit">Submit</button>
+      <button type="button" class="dialog-button-second" dialog-action="cancel">Cancel</button>
+    </form>
+  </div>
+</dialog>
+<script>
+  addActionHandler('login', async (evt) => {
+    const loginResp = await openDialog('loginDialog');
+    console.info(JSON.stringify(loginResp, 0, 2));
+    const options = {
+      body: JSON.stringify(loginResp.data),
+      cache: 'no-cache',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8'
+      },
+      method: 'POST'
+    }
+    const resp = await fetch('/api/account/login', options);
+    console.info(resp);
+    let json;
+    try {
+      json = await resp.json();
+      console.info(JSON.stringify(json, 0, 2));
+      if (resp.status === 200) {
+        // TODO: Redirect to proper page or reload current page.
+      }
+    }
+    catch(ex) {
+      console.error(ex);
+      console.error(await resp.text());
+    }
+  });
+</script>
+

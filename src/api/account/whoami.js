@@ -5,7 +5,7 @@
  * @apiGroup Account
  * @apiDescription Get information about the logged in user.
  * @apiPermissions (user)
- * @apiRequestValue <200> (cookie) imat-session "valid session id"
+ * @apiRequestValue <200> (cookie) session "valid session id"
  * @apiRequestExample <200> Who am I
  * @apiResponseExample <200> User information
  * {

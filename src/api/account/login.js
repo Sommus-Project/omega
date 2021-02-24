@@ -55,46 +55,50 @@ const SESSION_COOKIE = require('./SESSION_COOKIE');
  * }
  */
 async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
-  // TODO: If logged in then clear previous session
+  // TODO: ??If logged in then clear previous session??
   const { username, password, provider = 'default' } = data;
   const ds = req.dirService(provider);
   try {
-    await ds.authenticate(username, password);
-    req.usageLog.info(`User ${username} logged in.`);
-    const sessionId = await req.sessionManager.createSession(username, provider);
-    const headers = {
-      'set-cookie': `${SESSION_COOKIE}=${sessionId}; Path=/; HttpOnly; Secure;`
-    };
+    let headers;
+    const authenticated = await ds.authenticate(username, password);
+    if (authenticated) {
+      req.usageLog.info(`User ${username} logged in.`);
+      const sessionId = await req.sessionManager.createSession(username, provider);
+      headers = {
+        'set-cookie': `${SESSION_COOKIE}=${sessionId}; Path=/; HttpOnly; Secure;`
+      };
 
-    const thereIsANextStep = false;
-    if (thereIsANextStep) {
-      const step = 'Do the next step';
-      headers['X-Next-Step'] = step;
-      console.log('Next Step: returning a 401');
-      return new HttpError(401, {
-        data: { code: 0, reason: step },
-        headers
-      });
-    }
+      const thereIsANextStep = false;
+      if (thereIsANextStep) {
+        const step = 'Do the next step';
+        headers['X-Next-Step'] = step;
+        console.log('Next Step: returning a 401');
+        return new HttpError(401, {
+          data: { code: 0, reason: step },
+          headers
+        });
+      }
 
-    const user = await ds.getUser(username);
-    let status = 200;
-    if (user.locked || user.disabled) {
-      status = 401;
-      const reasons = [];
-      if (user.locked) {
-        reasons.push('LOCKED');
+      const user = await ds.getUser(username);
+      let status = 200;
+      if (user.locked || user.disabled) {
+        status = 401;
+        const reasons = [];
+        if (user.locked) {
+          reasons.push('LOCKED');
+        }
+        if (user.disabled) {
+          reasons.push('DISABLED');
+        }
+        headers['X-Reason'] = reasons.join(',');
       }
-      if (user.disabled) {
-        reasons.push('DISABLED');
-      }
-      headers['X-Reason'] = reasons.join(',');
+
+      return new HttpResponse(headers, user.toJSON(), status);
     }
-    return new HttpResponse(headers, user.toJSON(), status);
   }
 
   catch (ex) {
-    req.usageLog.info(`User ${username} failed to log in.`);
+    req.usageLog.info(`Exception during log in.`);
     if (ex instanceof ReferenceError) {
       req.usageLog.info(`500 Error - ${ex.message}`);
       return new HttpError(500, ex.message);
@@ -109,6 +113,9 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
       }
     });
   }
+
+  req.usageLog.warn(`Invalid credentials during log in.`);
+  throw new HttpError(400, "Invalid credentials");
 }
 doPost.description = {
   apiGroup: 'Account',

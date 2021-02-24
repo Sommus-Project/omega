@@ -5,7 +5,7 @@ const ERRORS = {
   NOT_MODIFIABLE: 'NOT_MODIFIABLE',
   NOT_REMOVABLE: 'NOT_REMOVABLE',
   PROTECTED_GROUP_NAME: 'PROTECTED_GROUP_NAME'
-}
+};
 const VALID_GROUP_NAME = /^[a-z][a-z0-9-_.]+$/i;
 const cache = {};
 
@@ -22,7 +22,7 @@ let cacheInterval = setInterval(() => {
   );
 }, 30000); // Check every 30 seconds
 
-// The destroy function is ONLY for testing and must be called in the after :function 
+// The destroy function is ONLY for testing and must be called in the after function
 // after(() => {
 //   directoryService.destroy();
 // })
@@ -60,7 +60,7 @@ function directoryService(config) {
     return {
       provider,
       // Check to see if the supplied username/password are valid.
-      // ✓ 2019-10-08
+      // ✓ 2021-02-23
       async authenticate(username, password) {
         return await service.authenticate(username, password);
       },
@@ -77,37 +77,37 @@ function directoryService(config) {
       },
 
       // Create a group and attach the users to the new group.
-      // ✓ 2019-10-08
-      async createGroup(groupName, description, users = []) {
+      async createGroup(requestor, groupName, description, users = []) {
         this.validateGroupName(groupName);
 
         if (service.isProtectedGroup(groupName)) {
           throw new InvalidActionError(ERRORS.PROTECTED_GROUP_NAME, `The group name "${groupName}" is invalid. Group names must not start with "searchappliance_"`);
         }
 
-        await service.createGroup(groupName, description);
+        await service.createGroup(requestor, groupName, description);
         if (Array.isArray(users) && users.length > 0) {
-          await this.setUsersForGroup(groupName, users, true)
+          await this.setUsersForGroup(requestor, groupName, users, true)
         }
       },
 
-      async createUser(username, name, password, groups = []) {
-        return await service.createUser(username, name, password, groups);
+      // ✓ 2021-02-23 - Seems to be finished
+      async createUser(requestor, data, tempPassword = true) {
+        return service.createUser(requestor, data, tempPassword);
       },
 
-      async deleteGroup(groupName) {
-        await service.delGroup(groupName);
+      async deleteGroup(requestor, groupName) {
+        await service.delGroup(requestor, groupName);
         this.clearCache();
       },
 
-      async deleteUser(username) {
+      async deleteUser(requestor, username) {
         const user = await this.getUser(username)
         if (!user.removable) {
-          throw new InvalidActionError(ERRORS.NOT_REMOVABLE, `The user "${username}" is not removable`);
+          throw new InvalidActionError(ERRORS.NOT_REMOVABLE, `The user "${username}" is not modifiable`);
         }
 
         this.clearUserFromCache(username);
-        return await service.delUser(username);
+        return service.delUser(requestor, username);
       },
 
       async getGroup(groupName) {
@@ -129,7 +129,7 @@ function directoryService(config) {
 
       async getUser(username) {
         var key = `${username}@${provider}`;
-        if (!cache[key]) {
+        //if (!cache[key]) {
           // If this user is not already in cache then created a new User object
           const user = new User(service);
           // Fill it with data from the appropriate service (LDAP, etc.)
@@ -139,25 +139,26 @@ function directoryService(config) {
             expTime: Date.now() + CACHE_TIMEOUT,
             user
           };
-        }
+        //}
 
         // Return the user from cache
         return cache[key].user;
       },
 
       async getUsers(params) {
-        return await service.getUsers(true, params);
+        return await service.getUsers(params);
       },
 
-      async setGroupDescription(groupName, description) {
+      async setGroupDescription(requestor, groupName, description) {
         if (service.isProtectedGroup(groupName)) {
           throw new InvalidActionError(ERRORS.PROTECTED_GROUP_NAME, `The group "${groupName}" is protected. You can not change the description.`);
         }
 
-        return await service.setGroupDescription(groupName, description);
+        return await service.setGroupDescription(requestor, groupName, description);
       },
 
-      async setUsersForGroup(groupName, memberList, isNewGroup) {
+      // TODO: Broken
+      async setUsersForGroup(requestor, groupName, memberList, isNewGroup) {
         this.validateIsExistingGroup(groupName);
 
         service.NONMODIFIABLE_USERS.some(user => {
@@ -170,7 +171,7 @@ function directoryService(config) {
         const membersToRemove = isNewGroup ? [] : existingUsers.filter(({ username }) => memberList.includes(username));
         const membersToAdd = isNewGroup ? memberList : memberList.filter(username => !existingUsers.includes(username));
 
-        await service.setUsersForGroup({ groupName, add: membersToAdd, del: membersToRemove });
+        await service.setUsersForGroup(requestor, { groupName, add: membersToAdd, del: membersToRemove });
 
         // Clear the cache for all the users whose groups changed
         [...membersToRemove, ...membersToAdd].forEach(username => this.clearUserFromCache(username));

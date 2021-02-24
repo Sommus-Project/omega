@@ -13,7 +13,7 @@
   },
   "root": true,
   "rules": {
-    "complexity": ["warn", {"max": 10}],
+    "complexity": ["warn", {"max": 20}],
     "curly": ["warn", "multi-line"],
     "default-case": "warn",
     "dot-notation": "warn",
@@ -49,7 +49,7 @@
     "no-new-wrappers": "error",
     "no-octal": "warn",
     "no-octal-escape": "warn",
-    "no-param-reassign": "warn",
+    "no-param-reassign": 0,
     "no-process-env": "off",
     "no-proto": "error",
     "no-redeclare": "error",

@@ -7,7 +7,7 @@ page = {
 assets = {
   head: {
     js: [],
-    css: []
+    css: ['/css/example.css']
   },
   js: [],
   css: []
@@ -15,29 +15,10 @@ assets = {
 var year = (new Date()).getFullYear();
 %>
 <div>
-  <style>
-    .top-menu {
-      list-style-type: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .menu-item {
-      border: 1px solid #334;
-      display: inline;
-    }
-
-    .menu-item a {
-      display: inline-block;
-      padding: 5px 10px;
-      width: 100px;
-    }
-
-  </style>
   <header>
     <ul class="top-menu">
       <li class="menu-item"><a href="/">Home</a></li>
-      <li class="menu-item"><a href="/form">Form Test</a></li>
+      <li class="menu-item selected"><a href="/form">Form Test</a></li>
     </ul>
   </header>
   <div>

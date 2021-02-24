@@ -8,7 +8,7 @@ const VALID_USERNAME = /^.+$/i;
  * * This is done by calling `User.setName` of the user object that was obtained from `DirectoryService` for the logged in user.
  * @apiPermissions (user)
  * @apiParam (body) name the new name of the loggin in user.
- * @apiRequestValue <204> (cookie) imat-session "valid session id"
+ * @apiRequestValue <204> (cookie) session "valid session id"
  * @apiRequestExample <204> Change user name
  * {
  *   "name": "Iron Man"

@@ -76,7 +76,9 @@ describe('Tests for API: src/api/users.js', () => {
             users
           };
         },
-        createUser(username, name, password, groups) { // eslint-disable-line no-unused-vars
+        FAIL!!
+        //TODO: Fix this to take all correct params in an object
+        createUser(creator, { username, firstname, lastname, address1, address2, city, state, zip, country, email, password, groups }) { // eslint-disable-line no-unused-vars
           if (username === 'exception') {
             const err = new Error('Failed to create user.');
             err.code = 123;

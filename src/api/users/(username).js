@@ -1,4 +1,5 @@
 /* eslint-env omega/api */
+const InvalidActionError = require('./directoryService/errors/InvalidActionError');
 const NoEntityError = require('./directoryService/errors/NoEntityError');
 
 //*****************************
@@ -44,7 +45,7 @@ async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
     throw ex;
   }
 }
-doGet.auth = ['user-edit'];
+//doGet.auth = ['user-edit'];
 
 /**
  * @api {delete} /api/users/:username Delete user
@@ -69,20 +70,24 @@ doGet.auth = ['user-edit'];
  * }
  */
 async function doDelete({ username, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
+  const { provider, id: requestor } = req.user;
   const ds = req.dirService(provider);
   if (username === req.user.username) {
     throw new HttpError(400, 'You can not delete yourself.');
   }
 
   try {
-    await ds.deleteUser(username);
+    await ds.deleteUser(requestor, username);
   }
 
   catch (ex) {
+    if (ex instanceof InvalidActionError) {
+      throw new HttpError(409, 'Unable to delete user');
+    }
+    console.log(ex.stack);
     // We do not respond with 404 if the user is not found.
   }
 }
-doDelete.auth = ['user-edit'];
+//doDelete.auth = ['user-edit'];
 
 apimodule.exports = { doGet, doDelete };

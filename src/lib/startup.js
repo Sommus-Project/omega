@@ -21,7 +21,7 @@ module.exports = (app, distPath, config) => {
       if (httpPort !== false) {
         http.createServer(app).listen(httpPort, HOST, () => {
           let host = correctHost(`http://${HOST}:${httpPort}`);
-          console.log(`Omega HTTP server running on "${host}" (Listening on ${HOST})`)
+          console.info(`Omega HTTP server running on "${host}" (Listening on ${HOST})`)
           if (httpsPort === false) {
             resolve();
           }
@@ -36,7 +36,7 @@ module.exports = (app, distPath, config) => {
 
         https.createServer(sslOptions, app).listen(httpsPort, HOST, () => {
           let host = correctHost(`https://${HOST}:${httpsPort}`);
-          console.log(`Omega HTTPS server running on "${host}" (Listening on ${HOST})`)
+          console.info(`Omega HTTPS server running on "${host}" (Listening on ${HOST})`)
           resolve();
         });
       }

@@ -65,10 +65,16 @@ function normalizeApiFolders(apiFolders, appPath) {
 
       uri = uri.slice(-1) === '/' ? uri : `${uri}/` // eslint-disable-line no-param-reassign
 
-      return {
-        uri,
-        folders: folders.map(folder => path.isAbsolute(folder) ? folder : path.join(appPath, folder))
-      };
+      const f = folders.reduce((acc, folder) => {
+        const temp = path.isAbsolute(folder) ? folder : path.join(appPath, folder);
+        if (!acc.includes(temp)) {
+          acc.push(temp);
+        }
+
+        return acc;
+      }, []);
+
+      return { uri, folders: f };
     }
   );
 }
@@ -259,6 +265,7 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
       return acc;
     }, {OPTIONS:true});
 
+    // TODO: These headers need to be returned on all endpoint calls.
     if (handler === OPTIONS) {
       // This is for CORS pre-flight check
       let headers = {

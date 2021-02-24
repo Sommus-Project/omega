@@ -8,7 +8,7 @@ const SESSION_COOKIE = require('./SESSION_COOKIE');
  * @apiDescription Log the user out by removing their session information from `SessionManager`.
  * @apiPermissions (user)
  * @apiRequestExample <204> Log user out
- * @apiResponseValue <204> (header) Set-Cookie imat_session=invalid; Max-Age=0; Path=/
+ * @apiResponseValue <204> (header) Set-Cookie session=invalid; Max-Age=0; Path=/
  * @apiResponseExample <204> Config File List
  */
 async function doPost({ req }) {

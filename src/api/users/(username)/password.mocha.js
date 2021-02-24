@@ -35,7 +35,6 @@ describe('Tests for API: src/api/users/(username)/password.js', () => {
           }
 
           user = { ...user }; // Make a copy
-          console.log(`--------------- Found User: ${username}`);
           user.setPassword = function (password) {
             if (password === 'badpassword') {
               throw new Error('bad password');

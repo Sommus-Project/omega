@@ -40,26 +40,13 @@ const getRanges = require('./getRanges');
  * ]
  */
 async function doGet({ req }) { // eslint-disable-line no-unused-vars
+  const ranges = getRanges(req.query);
   const { provider } = req.user;
   const ds = req.dirService(provider);
-  const resp = await ds.getUsers(getRanges(req.query));
-
-  //if (req.query.dev !== 'deep') {
-  resp.users = resp.users.map(user => ({
-    disabled: user.disabled,
-    locked: user.locked,
-    modifiable: user.modifiable,
-    name: user.name,
-    passwordExpired: user.passwordExpired,
-    provider,
-    removable: user.removable,
-    username: user.username
-  }));
-  //}
-
+  const resp = await ds.getUsers(ranges);
   return resp;
 }
-doGet.auth = ['user-edit'];
+//doGet.auth = ['user-edit'];
 
 /**
  * @api {post} /api/users Create a new user
@@ -88,12 +75,72 @@ doGet.auth = ['user-edit'];
  * }
  */
 async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
+  const { provider, id: requestor } = req.user;
+  console.log(`requestor[${requestor}]`);
   const ds = req.dirService(provider);
-  const { username, name, password, groups } = data;
+  const { username = '', firstname = '', lastname = '', address1 = '', address2 = '', city = '', state = '', zip = '', country = '', email = '', password = '', groups = [] } = data;
+
+  const errors = [];
+  if (!username) {
+    errors.push('"username" must be provided.');
+  }
+  if (!firstname) {
+    errors.push('"firstname" must be provided.');
+  }
+  if (!lastname) {
+    errors.push('"lastname" must be provided.');
+  }
+  if (!address1) {
+    errors.push('"address1" must be provided.');
+  }
+  if (!city) {
+    errors.push('"city" must be provided.');
+  }
+  if (!state) {
+    errors.push('"state" must be provided.');
+  }
+  if (!zip) {
+    errors.push('"zip" must be provided.');
+  }
+  if (!country) {
+    errors.push('"country" must be provided.');
+  }
+  if (!email) {
+    errors.push('"email" must be provided.');
+  }
+  if (!password) {
+    errors.push('"password" must be provided.');
+  }
+  if (!groups) {
+    errors.push('"groups" must be provided.');
+  }
+
+  if (errors.length > 0) {
+    const options = {
+      data: { errors },
+      title: 'Invalid Parameters'
+    }
+    return new HttpError(400, options);
+  }
+
   try {
-    await ds.createUser(username, name, password, groups);
-    return new EntityCreated(`${req.path}/${username}`, await ds.getUser(username));
+    const newUserData = {
+      username,
+      firstname,
+      lastname,
+      address1,
+      address2,
+      city,
+      state,
+      zip,
+      country,
+      email,
+      password,
+      groups
+    };
+    await ds.createUser(requestor, newUserData, true);
+    const newUser = await ds.getUser(username);
+    return new EntityCreated(`${req.path}/${username}`, newUser);
   }
 
   catch (ex) {
@@ -104,6 +151,6 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
     return new HttpError(400, options);
   }
 }
-doPost.auth = ['user-edit'];
+//doPost.auth = ['user-edit'];
 
 apimodule.exports = { doGet, doPost };

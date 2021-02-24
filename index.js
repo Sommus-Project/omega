@@ -1,12 +1,24 @@
 (() => {
   const [major, minor] = process.versions.node.split('.').map(num => Number(num));
-  if (major < 10 || major === 10 && minor < 10) {
-    console.error('\n\nOmega apps require node version 10.10.0 or newer.\n\n');
+  if (major < 14 || major === 14 && minor < 10) {
+    console.error('\n\nOmega apps require node version 14.10.0 or newer.\n\n');
     process.exit(1);
   }
 })();
 
 console.time('Total startup time');
+const APP_PATH = process.cwd().replace(/(?:^[a-zA-Z]:)?\\/g, '/');
+const fs = require('fs');
+const path = require('path').posix;
+// Load env vars if there is a file called '_env.js'
+// in the root folder of the applicaiton
+const envFilePath = path.join(APP_PATH, '_env.js');
+if (fs.existsSync(envFilePath)) {
+  const env = require(envFilePath);
+  Object.entries(env).forEach(([key, value]) => {
+    process.env[key] = value;
+  });
+}
 const apiSystem = require('./dist/lib/apiSystem');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
@@ -21,7 +33,6 @@ const error404Handler = require('./dist/lib/error404Handler');
 const errorHandler = require('./dist/lib/errorHandler');
 const express = require('express');
 const forceSecure = require('./dist/lib/forceSecure');
-const fs = require('fs');
 const getBrowserNeeds = require('./dist/lib/getBrowserNeeds');
 const getServerInfo = require('./dist/lib/getServerInfo');
 const initApp = require('./dist/lib/initApp');
@@ -31,16 +42,16 @@ const logNameGenerator = require('./dist/lib/logNameGenerator');
 const morgan = require('morgan'); // Request logging
 const omegalib = require('@sp/omega-lib');
 const {isFalse, isTrue, makePathIfNeeded} = omegalib;
-const path = require('path').posix;
 const processAppRoutes = require('./dist/lib/processAppRoutes');
 const proxy = require('./dist/lib/black-list-proxy');
 const startup = require('./dist/lib/startup');
 const rfs = require('rotating-file-stream');
 const statusMonitor = require('express-status-monitor')({path: '/system/some_status_page_that_is_hard_to_find.blah'});
 const {nanoid} = require('nanoid');
-const __folder = __dirname.replace(/\\|[A-Z]\:[\\\/]/gi, '/');
+const __folder = __dirname.replace(/(?:^[a-zA-Z]:)?\\/g, '/');
 const { version: omegaVersion } = require('./package.json');
 const OMEGA_API_PATH = path.join(__folder, 'dist/api');
+console.log(`OMEGA_API_PATH:[${OMEGA_API_PATH}]`);
 
 // Do not skip any request to the API path. Skip logging on all other calls if it is not an error response.
 const logSkipFn = (req, res) => (req.originalUrl.startsWith('/api')) ? false : res.statusCode < 400;
@@ -55,7 +66,7 @@ const DEFAULT_OPTIONS = {
     '/api': ['dist/api', OMEGA_API_PATH]
   },
   appHeaders: [],
-  appPath: process.cwd().replace(/\\/g, '/'),
+  appPath: APP_PATH,
   appRoutes: 'dist/routes/!(*.mocha).js',
   brandFolder: 'brand',
   cacheBuster: 0,
@@ -73,7 +84,7 @@ const DEFAULT_OPTIONS = {
   logSkipFn: false,
   maxLogFileSize: '500M',
   providers: {},
-  proxyHost: '10.10.9.238',
+  proxyHost: '',
   proxyPort: 443,
   proxyTimeout: 30000,
   redirectFn: null,
@@ -114,7 +125,8 @@ function initOmega(config = {}) { //eslint-disable-line complexity
   debug('Omega app initialization started.');
 
   const options = Object.assign({}, DEFAULT_OPTIONS, config);
-  options.appPath = options.appPath.replace(/\\/g, '/');
+  options.appPath = options.appPath.replace(/(?:^[a-zA-Z]:)?\\/g, '/');
+  console.log(`options.appPath:[${options.appPath}]`)
 
   const appPath = options.appPath; // Root Path of the app using this code
   const brandStatic = path.join(appPath, options.brandFolder); // 3rd Party brand folder.

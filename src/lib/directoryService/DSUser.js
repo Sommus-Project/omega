@@ -5,6 +5,10 @@ class DSUser {
   constructor() {
     const initialDate = new Date(0);
     const initialState = {
+      address1: '',
+      address2: '',
+      city: '',
+      country: '',
       disabled: true,
       email: '',
       firstname: '',
@@ -13,11 +17,15 @@ class DSUser {
       lastLogin: initialDate,
       lastname: '',
       locked: true,
+      modifiable: false,
       passwordExpirationTime: initialDate,
       passwordRetryCount: 0,
+      profilePicture: '',
       provider: '',
       removable: false,
-      username: ''
+      state: '',
+      username: '',
+      zip: ''
     }
     _private.set(this, initialState);
   }
@@ -160,10 +168,15 @@ class DSUser {
 
   toJSON() {
     const p = _private.get(this);
-    const { disabled, email, firstname, id, lastname, locked, provider, removable, username } = p;
-    const groups = [...p.groups];
+    const { address1, address2, city, country, disabled, email, firstname, id, lastLogin, lastname, locked, modifiable, passwordExpirationTime, passwordRetryCount, profilePicture, provider, removable, state, username, zip, canChangePassword, deleted, passwordExpirationWarned, roles } = p;
+    //const { disabled, email, firstname, id, lastname, locked, provider, removable, username } = p;
+    const groups = p.groups ? [...p.groups] : undefined;
 
-    return { disabled, email, firstname, groups, id, lastname, locked, provider, removable, username, passwordExpired: this.passwordExpired };
+    return {
+      id, username, provider, firstname, lastname, email, disabled, lastLogin, locked, modifiable, removable, deleted,
+      passwordExpirationTime, passwordRetryCount, canChangePassword, passwordExpirationWarned, passwordExpired: this.passwordExpired, 
+      address1, address2, city, state, zip, country, profilePicture, groups, roles
+    };
   }
 }
 
