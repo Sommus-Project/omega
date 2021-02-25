@@ -23,8 +23,8 @@ const InvalidActionError = require('./directoryService/errors/InvalidActionError
  * }
  */
 async function doGet({ groupName, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { domain } = req.user;
+  const ds = req.dirService(domain);
 
   const users = await ds.getGroupUsers(groupName, getRanges(req.query));
   if (users) {
@@ -47,8 +47,8 @@ doGet.auth = ['group-edit'];
  * @apiResponseExample <201> FIXME Success Reponse Title
  */
 async function doPut({ groupName, data, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { domain } = req.user;
+  const ds = req.dirService(domain);
   const { users } = data;
 
   if (!Array.isArray(users)) {

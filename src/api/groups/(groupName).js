@@ -21,8 +21,8 @@ const InvalidActionError = require('./directoryService/errors/InvalidActionError
  * }
  */
 async function doGet({ groupName, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { domain } = req.user;
+  const ds = req.dirService(domain);
   const group = await ds.getGroup(groupName);
   if (group) {
     return group;
@@ -43,8 +43,8 @@ doGet.auth = ['group-edit'];
  * @apiResponseExample <204> FIXME Success Reponse Title
  */
 async function doDelete({ groupName, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { domain } = req.user;
+  const ds = req.dirService(domain);
   try {
     await ds.deleteGroup(groupName);
   }

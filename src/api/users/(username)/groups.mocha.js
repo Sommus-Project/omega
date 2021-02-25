@@ -52,7 +52,7 @@ describe('Tests for API: src/api/users/(username)/groups.js', () => {
   const req = {
     user: {
       username: 'ppotts',
-      provider: 'default'
+      domain: 'default'
     },
     query: {
       /*
@@ -61,7 +61,7 @@ describe('Tests for API: src/api/users/(username)/groups.js', () => {
       order
       */
     },
-    dirService(provider) { // eslint-disable-line no-unused-vars
+    dirService(domain) { // eslint-disable-line no-unused-vars
       return {
         getUser(username) {
           if (username === 'missing') {

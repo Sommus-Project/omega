@@ -10,7 +10,7 @@ describe('Tests for API: src/api/groups.js', () => {
   const req = {
     user: {
       username: 'tomthumb',
-      provider: 'default'
+      domain: 'default'
     },
     query: {
       /*
@@ -19,7 +19,7 @@ describe('Tests for API: src/api/groups.js', () => {
       order
       */
     },
-    dirService(provider) { // eslint-disable-line no-unused-vars
+    dirService(domain) { // eslint-disable-line no-unused-vars
       return {
         createGroup(name, description, users) { // eslint-disable-line no-unused-vars
           testData.greateGroup = { name, description, users };

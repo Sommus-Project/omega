@@ -11,17 +11,17 @@
  * @apiResponseExample <204> User password changed
  */
 async function doPut({ data, req }) {
-  const { username, provider } = req.user;
+  const { username, domain, id: requestor } = req.user;
   const { newPassword, existingPassword } = data;
   if (Object.keys(data).length !== 2 || !newPassword || !existingPassword) {
     req.usageLog.info(`User ${username} send invalid parameters`);
     return new HttpError(400, 'Invalid parameters sent.');
   }
 
-  const ds = req.dirService(provider);
-  const user = ds.getUser(username);
+  const ds = req.dirService(domain);
+  const user = await ds.getUser(username);
   req.usageLog.info(`User ${username} changing their own password`);
-  await user.setPassword(newPassword, existingPassword);
+  await user.setPassword(requestor, newPassword, existingPassword);
 }
 doPut.loggedIn = true;
 

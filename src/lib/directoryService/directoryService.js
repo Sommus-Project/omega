@@ -42,23 +42,23 @@ function directoryService(config) {
   }
 
   // Generate the appropriate information based on the
-  // set of providers that are passed in the config data.
-  Object.entries(config).forEach(([providerName, pInfo]) => {
-    dsList[providerName] = pInfo;
+  // set of domains that are passed in the config data.
+  Object.entries(config).forEach(([domainName, pInfo]) => {
+    dsList[domainName] = pInfo;
   });
 
   // Return a function that will return the appropriate DS functions
-  // based on the passed in provider.
-  return (provider) => {
-    if (!dsList[provider]) {
-      throw new ReferenceError(`Unknown provider [${provider}]`);
+  // based on the passed in domain.
+  return (domain) => {
+    if (!dsList[domain]) {
+      throw new ReferenceError(`Unknown domain [${domain}]`);
     }
 
-    const { User, service } = dsList[provider];
+    const { User, service } = dsList[domain];
 
     // Return the appropriate DS functions
     return {
-      provider,
+      domain,
       // Check to see if the supplied username/password are valid.
       // ✓ 2021-02-23
       async authenticate(username, password) {
@@ -70,7 +70,7 @@ function directoryService(config) {
       },
 
       async clearUserFromCache(username) {
-        var key = `${username}@${provider}`;
+        var key = `${username}@${domain}`;
         if (cache[key]) {
           delete cache[key];
         }
@@ -128,12 +128,12 @@ function directoryService(config) {
       },
 
       async getUser(username) {
-        var key = `${username}@${provider}`;
+        var key = `${username}@${domain}`;
         //if (!cache[key]) {
           // If this user is not already in cache then created a new User object
           const user = new User(service);
           // Fill it with data from the appropriate service (LDAP, etc.)
-          await user.init(username, provider);
+          await user.init(username, domain);
           // Save this user in the cacke
           cache[key] = {
             expTime: Date.now() + CACHE_TIMEOUT,

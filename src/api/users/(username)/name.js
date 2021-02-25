@@ -8,18 +8,19 @@ const path = require('path').posix;
  * @api {get} /api/users/:username/name Get user.name
  * @apiGroup Users
  * @apiDescription Get the 'name' for the specified user
- * @apiPermissions (role) 'user-edit'
+ * @apiPermissions (role) 'READ_USERS'
  * @apiParam (path) username username of the user to read.
  * @apiRequestValue <200> (path) username johnsloan.
  * @apiRequestExample <200> Get name
- * @apiResponseExample <200> State of name
+ * @apiResponseExample <200> Value of the name
  * {
- *   name: true
+ *   firstname: "John",
+ *   lastname: "Smith"
  * }
  */
 async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { domain } = req.user;
+  const ds = req.dirService(domain);
 
   try {
     const user = await ds.getUser(username);
@@ -30,21 +31,21 @@ async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
     throw404(path.dirname(req.path), ex.message);
   }
 }
-doGet.auth = ['user-edit'];
+doGet.auth = ['READ_USERS'];
 
 /**
  * @api {put} /api/users/:username/name Set user.name
  * @apiGroup Users
  * @apiDescription Set the state of 'name' for the specified user
- * @apiPermissions (role) 'user-edit'
+ * @apiPermissions (role) 'WRITE_USERS'
  * @apiParam (path) username username of the user to affect.
  * @apiRequestValue <204> (path) username jillsmith.
  * @apiRequestExample <204> Set state of name
  * @apiResponseExample <204> State of name set
  */
 async function doPut({ username, data, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { domain } = req.user;
+  const ds = req.dirService(domain);
   let user;
   try {
     user = await ds.getUser(username);
@@ -55,14 +56,14 @@ async function doPut({ username, data, req }) { // eslint-disable-line no-unused
   }
 
   try {
-    await user.setName(data.name);
+    await user.setName(data);
   }
 
   catch (ex) {
     throw new HttpError(400, { title: ex.message, data: `Unable to set 'name' for the user ${username}` });
   }
 }
-doPut.auth = ['user-edit'];
+doPut.auth = ['WRITE_USERS'];
 
 
 apimodule.exports = { doGet, doPut };

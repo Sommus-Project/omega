@@ -10,7 +10,7 @@
  * @apiResponseExample <200> User information
  * {
  *   "username": "someuser",
- *   "provider": "default",
+ *   "domain": "default",
  *   "session_expires": 1570810038626,
  *   "name": "Some user",
  *   "uuid": "123e4567-e89b-42d3-a456-556642440000"

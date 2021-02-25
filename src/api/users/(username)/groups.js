@@ -8,7 +8,7 @@ const path = require('path').posix;
  * @api {get} /api/users/:username/groups Get user.groups
  * @apiGroup Users
  * @apiDescription FIXME Description
- * @apiPermissions (role) FIXME 'conf-read'
+ * @apiPermissions (role) FIXME 'READ_USERS'
  * @apiParam (path) username FIXME Param description.
  * @apiRequestValue <200> (path) username FIXME Value.
  * @apiRequestExample <200> FIXME Success Request Title
@@ -18,8 +18,8 @@ const path = require('path').posix;
  * }
  */
 async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { domain } = req.user;
+  const ds = req.dirService(domain);
   let user;
   try {
     user = await ds.getUser(username);
@@ -31,13 +31,13 @@ async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
 
   return user.groups;
 }
-doGet.auth = ['user-edit'];
+doGet.auth = ['READ_USERS'];
 
 /**
  * @api {put} /api/users/:username/groups Set user.groups
  * @apiGroup Users
  * @apiDescription FIXME Description
- * @apiPermissions (role) FIXME 'conf-read'
+ * @apiPermissions (role) FIXME 'WRITE_USERS'
  * @apiParam (path) username FIXME Param description.
  * @apiRequestValue <201> (path) username FIXME Value.
  * @apiRequestExample <201> FIXME Success Request Title
@@ -49,8 +49,8 @@ async function doPut({ username, data, req }) { // eslint-disable-line no-unused
     throw new HttpError(400, { title: 'Groups must be an array of strings.' });
   }
 
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { domain } = req.user;
+  const ds = req.dirService(domain);
   let user;
   try {
     user = await ds.getUser(username);
@@ -68,6 +68,6 @@ async function doPut({ username, data, req }) { // eslint-disable-line no-unused
     throw new HttpError(400, { title: ex.message, data: { badGroup: ex.additional } });
   }
 }
-doPut.auth = ['user-edit'];
+doPut.auth = ['WRITE_USERS'];
 
 apimodule.exports = { doGet, doPut };

@@ -10,13 +10,13 @@ class DSGroup {
     _private.set(this, initialState);
   }
 
-  init(provider) {
+  init(domain) {
     const p = _private.get(this);
     if (p.username !== uid) {
       throw new Error(`User object incorrectly instantiated. '${p.username}' should have been '${uid}'`);
     }
 
-    p.provider = provider;
+    p.domain = domain;
   }
 
   static initFromObj(dsGroup, groupInfo) {

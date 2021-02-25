@@ -23,10 +23,10 @@ describe('Tests for API: src/api/users/(username)/password.js', () => {
   const req = {
     user: {
       username: 'ppotts',
-      provider: 'default'
+      domain: 'default'
     },
     query: {},
-    dirService(provider) { // eslint-disable-line no-unused-vars
+    dirService(domain) { // eslint-disable-line no-unused-vars
       return {
         getUser(username) {
           let user = users.filter((item) => item.username === username)[0];

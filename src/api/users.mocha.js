@@ -54,7 +54,7 @@ describe('Tests for API: src/api/users.js', () => {
   const req = {
     user: {
       username: 'ppotts',
-      provider: 'default'
+      domain: 'default'
     },
     query: {
       /*
@@ -63,7 +63,7 @@ describe('Tests for API: src/api/users.js', () => {
       order
       */
     },
-    dirService(provider) { // eslint-disable-line no-unused-vars
+    dirService(domain) { // eslint-disable-line no-unused-vars
       return {
         getUser(username) {
           return users.filter((item) => item.username === username)[0];
@@ -76,7 +76,7 @@ describe('Tests for API: src/api/users.js', () => {
             users
           };
         },
-        FAIL!!
+        //FAIL!!
         //TODO: Fix this to take all correct params in an object
         createUser(creator, { username, firstname, lastname, address1, address2, city, state, zip, country, email, password, groups }) { // eslint-disable-line no-unused-vars
           if (username === 'exception') {
@@ -102,7 +102,7 @@ describe('Tests for API: src/api/users.js', () => {
       modifiable: defUser.modifiable,
       name: defUser.name,
       passwordExpired: defUser.passwordExpired,
-      provider: req.user.provider,
+      domain: req.user.domain,
       removable: defUser.removable,
       username: defUser.username
     }));

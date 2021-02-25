@@ -18,7 +18,7 @@ const EntityCreated = require('./EntityCreated');
  * @api {get} /api/groups Get groups
  * @apiGroup Groups
  * @apiDescription FIXME Description
- * @apiPermissions (role) FIXME 'conf-read'
+ * @apiPermissions (role) FIXME 'READ_GROUPS'
  *
  * @apiRequestExample <200> FIXME Success Request Title
  * @apiResponseExample <200> FIXME Success Reponse Title
@@ -38,18 +38,18 @@ const EntityCreated = require('./EntityCreated');
  * }
  */
 async function doGet({ req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { domain } = req.user;
+  const ds = req.dirService(domain);
   const groups = await ds.getGroups(getRanges(req.query));
   return groups;
 }
-doGet.auth = ['group-edit'];
+doGet.auth = ['READ_GROUPS'];
 
 /**
  * @api {post} /api/groups Save new groups
  * @apiGroup Groups
  * @apiDescription FIXME Description
- * @apiPermissions (role) FIXME 'conf-read'
+ * @apiPermissions (role) FIXME 'WRITE_GROUPS'
  *
  * @apiRequestExample <201> FIXME Success Request Title
  * @apiResponseValue <201> (header) Location FIXME /api/groups
@@ -78,8 +78,8 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
     throw new HttpError(400, '"users" must be null or an array of usernames.');
   }
 
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { domain } = req.user;
+  const ds = req.dirService(domain);
 
   try {
     const newGroup = await ds.createGroup(name, description, users);
@@ -94,6 +94,6 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
     throw ex;
   }
 }
-doPost.auth = ['group-edit'];
+doPost.auth = ['WRITE_GROUPS'];
 
 apimodule.exports = { doGet, doPost };

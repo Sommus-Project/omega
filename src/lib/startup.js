@@ -2,6 +2,7 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const fs = require('fs');
+const os = require('os');
 const https = require('https');
 const http = require('http');
 const HOST = '0.0.0.0';

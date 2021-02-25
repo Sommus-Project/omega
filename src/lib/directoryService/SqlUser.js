@@ -1,20 +1,30 @@
 const DSUser = require('./DSUser');
 const types = require('../types');
-const { errors, HttpError } = require('../../..');
+const { /*errors, */HttpError } = require('../../..');
 const { VALUE_MUST_BE, isBool, isDate, isNum, isStr } = types;
-const { AttributeError } = errors.NoEntityError;
+//const { AttributeError } = errors.NoEntityError;
 const ATTR = {
+  ADDRESS1: 'address1',
+  ADDRESS2: 'address2',
+  CAN_CHANGE_PASSWORD: 'canChangePassword',
+  CITY: 'city',
+  COUNTRY: 'country',
   DISABLED: 'disabled',
   EMAIL: 'email',
   FIRSTNAME: 'firstname',
-  GROUPS: '!groups',
+  GROUPS: 'groups',
   LAST_LOGIN: 'lastLogin',
   LASTNAME: 'lastname',
   LOCKED: 'locked',
-  PASSWORD: 'password',
+  MODIFIABLE: 'modifiable',
   PASSWORD_EXPIRATION_TIME: 'passwordExpirationTime',
   PASSWORD_RETRY_COUNT: 'passwordRetryCount',
-  USERNAME: 'username'
+  PASSWORD: 'password',
+  PASSWORD_EXPIRATION_WARNED: 'passwordExpirationWarned',
+  PROFILE_PICTURE: 'profilePicture',
+  STATE: 'state',
+  USERNAME: 'username',
+  ZIP: 'zip'
 };
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
@@ -22,27 +32,15 @@ const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 const RETRY_COUNT = 3;
 const ACCOUNT_INACTIVITY_LIMIT = 45 * DAY;
-const PASSWORD_MAX_AGE = 90 * DAY;
 
-async function setDateAttr(user, attribute, date) {
+async function setDateAttr(requestor, user, attribute, date) {
   validateCanChange(user);
+
   if (!isDate(date)) {
     throw new TypeError(VALUE_MUST_BE.DATE);
   }
 
-  await user.service.setAttr(user.id, attribute, date);
-}
-
-async function setPassword(user, password) {
-  try {
-    await user.service.setPassword(user.id, password);
-  }
-
-  catch (ex) {
-    // TODO: Need to create an InvalidPassword error and use it here.
-    const err = new AttributeError(ex.code, ex.message, ex.additional);
-    throw err;
-  }
+  await user.service.setAttr(requestor, user.id, attribute, date);
 }
 
 function validateCanChange(user, errorMsg = 'Changing a root user is not permitted.') {
@@ -64,15 +62,15 @@ class SqlUser extends DSUser {
         throw new TypeError(`The argument 'data.username' must be a valid string`);
       }
 
-      if (!data.provider) {
-        throw new TypeError(`The argument 'data.provider' must be a valid string`);
+      if (!data.domain) {
+        throw new TypeError(`The argument 'data.domain' must be a valid string`);
       }
       DSUser.initFromObj(this, data);
-      super.init(data.username, data.provider);
+      super.init(data.username, data.domain);
     }
   }
 
-  async changeGroups(changes) {
+  async changeGroups(requestor, changes) {
     // TODO: This has a ton of Logic needed to add and remove groups
     // Certain groups must work together and others must work apart.
     let groups = this.groups;
@@ -96,16 +94,16 @@ class SqlUser extends DSUser {
       });
     }
 
-    await this.setGroups(groups);
+    await this.setGroups(requestor, groups);
   }
 
-  async init(username, provider) {
+  async init(username, domain = 'default') {
     if (!username) {
       throw new TypeError(`The argument 'username' must be a valid string`);
     }
 
-    if (!provider) {
-      throw new TypeError(`The argument 'provider' must be a valid string`);
+    if (!domain) {
+      throw new TypeError(`The argument 'domain' must be a valid string`);
     }
 
     const obj = await this.service.getUserById(username);
@@ -113,10 +111,10 @@ class SqlUser extends DSUser {
       throw new HttpError(404, "User not found");
     }
     DSUser.initFromObj(this, obj);
-    super.init(username, provider);
+    super.init(username, domain);
   }
 
-  async setDisabled(disabled) {
+  async setDisabled(requestor, disabled) {
     validateCanChange(this, 'Disabling a root user is not permitted.');
 
     if (!isBool(disabled)) {
@@ -124,26 +122,27 @@ class SqlUser extends DSUser {
     }
 
     if (disabled !== this.disabled) {
-      await this.service.setAttr(this.id, ATTR.DISABLED, disabled);
+      await this.service.setAttr(requestor, this.id, ATTR.DISABLED, disabled);
       await super.setDisabled(disabled);
     }
   }
 
-  async setGroups(groups) {
+  // TODO: This needs to properly set the groups in the `user_groups` table
+  async setGroups(requestor, groups) {
     if (!Array.isArray(groups)) {
       throw new TypeError(VALUE_MUST_BE.ARRAY_OF_STRINGS);
     }
 
-    await this.service.setAttr(this.id, ATTR.GROUPS, groups);
+    await this.service.setAttr(requestor, this.id, ATTR.GROUPS, groups);
     await super.setGroups(groups);
   }
 
-  async setLastLogin(date) { // Only called by SSO?
-    await setDateAttr(this, ATTR.LAST_LOGIN, date);
+  async setLastLogin(requestor, date) { // Only called by SSO?
+    await setDateAttr(requestor, this, ATTR.LAST_LOGIN, date);
     await super.setLastLogin(date);
   }
 
-  async setLocked(locked) {
+  async setLocked(requestor, locked) {
     validateCanChange(this, 'Locking a root user is not permitted.');
 
     if (!isBool(locked)) {
@@ -157,58 +156,84 @@ class SqlUser extends DSUser {
       }
 
       await this.setLastLogin(lastLoginTime);
-      await this.setpasswordRetryCount(RETRY_COUNT);
+      await this.setpasswordRetryCount(requestor, RETRY_COUNT);
       await super.setLocked(locked);
     }
   }
 
-  async setFirstName(name) {
+  async setFirstName(requestor, name) {
     validateCanChange(this);
     if (!isStr(name)) {
       throw new TypeError(VALUE_MUST_BE.STRING);
     }
 
-    await this.service.setAttr(this.id, ATTR.FIRSTNAME, name);
+    await this.service.setAttr(requestor, this.id, ATTR.FIRSTNAME, name);
     await super.setFirstName(name)
   }
 
-  async setLastname(name) {
+  async setLastname(requestor, name) {
     validateCanChange(this);
     if (!isStr(name)) {
       throw new TypeError(VALUE_MUST_BE.STRING);
     }
 
-    await this.service.setAttr(this.id, ATTR.LASTNAME, name);
+    await this.service.setAttr(requestor, this.id, ATTR.LASTNAME, name);
     await super.setLastName(name)
   }
 
-  async setPassword(newPassword, existingPassword) {
-    let expTime;
+  async setName(requestor, {firstname, lastname} = {}) {
+    validateCanChange(this);
+    if (!isStr(firstname) || !isStr(lastname)) {
+      throw new TypeError(VALUE_MUST_BE.STRING);
+    }
+
+    await this.service.setAttr(requestor, this.id, ATTR.FIRSTNAME, firstname);
+    await super.setFirstName(firstname)
+    await this.service.setAttr(requestor, this.id, ATTR.LASTNAME, lastname);
+    await super.setFirstName(lastname)
+  }
+
+  async setPassword(requestor, newPassword, existingPassword) {
     // MUST not call super.setPassword();
+    let forceChangeOnNextLogin = false;
+
     if (existingPassword) {
       // User attempting to change their own password
-      if (!(await this.service.authenticate(this.username, existingPassword))) {
+      const authenticated = await this.service.authenticate(this.username, existingPassword);
+      if (!authenticated) {
         throw new Error('INVALID_EXISTING_PASSWORD');
       }
-      await setPassword(this, newPassword);
-      expTime = new Date(Date.now() + PASSWORD_MAX_AGE);
     }
     else {
       // Admin changing a user's password
-      await setPassword(this, newPassword);
-      await this.setpasswordRetryCount(0);
-      expTime = new Date(0); // Expire this password
+      forceChangeOnNextLogin = true;
+      await this.setpasswordRetryCount(requestor, 0);
     }
 
-    this.setPasswordExpirationTime(expTime);
+    // Calling service.setPassword sets the password value, passwordExpirationTime and canChangePassword
+    const resp = await this.service.setPassword(requestor, this.id, newPassword, forceChangeOnNextLogin);
+    if (resp) {
+      await super.setPasswordExpirationTime(resp.passwordExpirationTime);
+      await super.setCanChangePassword(resp.canChangePassword);
+    }
+    else {
+      console.error(`Failed to get back a response from this.service.setPassword`);
+    }
   }
 
-  async setPasswordExpirationTime(date) {
-    await setDateAttr(this, ATTR.PASSWORD_EXPIRATION_TIME, date);
+  async setCanChangePassword(requestor, date) {
+    // TODO: Should this be allowed? Or do I remove it.
+    await setDateAttr(requestor, this, ATTR.CAN_CHANGE_PASSWORD, date);
+    await super.setCanChangePassword(date);
+  }
+
+  async setPasswordExpirationTime(requestor, date) {
+    // TODO: Should this be allowed? Or do I remove it.
+    await setDateAttr(requestor, this, ATTR.PASSWORD_EXPIRATION_TIME, date);
     await super.setPasswordExpirationTime(date);
   }
 
-  async setpasswordRetryCount(retries) {
+  async setpasswordRetryCount(requestor, retries) {
     validateCanChange(this);
 
     if (!isNum(retries)) {
@@ -216,7 +241,7 @@ class SqlUser extends DSUser {
     }
 
     if (retries !== this.retries) {
-      await this.service.setAttr(this.id, ATTR.PASSWORD_RETRY_COUNT, retries);
+      await this.service.setAttr(requestor, this.id, ATTR.PASSWORD_RETRY_COUNT, retries);
       await super.setpasswordRetryCount(retries);
     }
   }

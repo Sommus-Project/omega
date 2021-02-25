@@ -1,24 +1,24 @@
 function openDialog(dialogId, root = document) { // eslint-disable-line no-unused-vars
   return new Promise((resolve, reject) => {
-    const dlg = root.getElementById(dialogId);
-    if (!dlg) {
+    const dialogEl = root.getElementById(dialogId);
+    if (!dialogEl) {
       reject(new Error('Dialog does not exist'));
     }
     const activeElement = document.activeElement;
-    dlg.onclose = () => activeElement.focus();
-    dlg.oncancel = () => resolve({ action: 'cancel' });
+    dialogEl.onclose = () => activeElement.focus();
+    dialogEl.oncancel = () => resolve({ action: 'cancel' });
 
-    function handler(dlg) {
+    function handler(dlgEl) {
       return (evt) => {
         const action = evt.target.getAttribute('dialog-action');
         if (action) {
-          dlg.removeEventListener('click', handler);
+          dlgEl.removeEventListener('click', handler);
           evt.stopPropagation();
           evt.preventDefault()
-          const resp = {action};
+          const resp = { action };
           if (action !== 'cancel') {
             resp.data = {};
-            dlg.querySelectorAll('[name]').forEach(el => {
+            dlgEl.querySelectorAll('[name]').forEach(el => {
               if (el.tagName === 'TEXTAREA') {
                 resp.data[el.name] = el.value;
               }
@@ -60,18 +60,18 @@ function openDialog(dialogId, root = document) { // eslint-disable-line no-unuse
               }
             });
           }
-          dlg.close();
+          dlgEl.close();
           resolve(resp);
         }
       }
     }
 
-    const forms = dlg.querySelectorAll('form');
+    const forms = dialogEl.querySelectorAll('form');
     if (forms.length > 0) {
       forms.forEach(form => form.reset());
     }
     else {
-      dlg.querySelectorAll('[name]').forEach(el => {
+      dialogEl.querySelectorAll('[name]').forEach(el => {
         if (el.tagName === 'TEXTAREA') {
           el.value = el.defaultValue;
         }
@@ -95,17 +95,17 @@ function openDialog(dialogId, root = document) { // eslint-disable-line no-unuse
         }
       });
     }
-    dlg.addEventListener('click', handler(dlg));
-    dlg.showModal();
+    dialogEl.addEventListener('click', handler(dialogEl));
+    dialogEl.showModal();
     /*
     // Autofocus seems to happen automatically
-    const temp = dlg.querySelector('[autofocus]');
+    const temp = dialogEl.querySelector('[autofocus]');
     if (temp) {
       temp.focus();
       temp.select();
     }
     else {
-      dlg.focus();
+      dialogEl.focus();
     }
     */
   });

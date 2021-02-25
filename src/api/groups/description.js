@@ -17,8 +17,8 @@ const path = require('path');
  * }
  */
 async function doGet({ groupName, req }) {
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { domain } = req.user;
+  const ds = req.dirService(domain);
   const group = await ds.getGroup(groupName);
   if (!group) {
     throw404(path.pathname(req.path), 'Group not found');
@@ -44,8 +44,8 @@ async function doPut({ groupName, data, req }) { // eslint-disable-line no-unuse
     throw new HttpError(400, 'You must provide a group "description".');
   }
 
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { domain } = req.user;
+  const ds = req.dirService(domain);
   const group = await ds.getGroup(groupName);
   if (!group) {
     throw404(path.pathname(req.path), 'Group not found');

@@ -7,6 +7,7 @@ class DSUser {
     const initialState = {
       address1: '',
       address2: '',
+      canChangePassword: initialDate,
       city: '',
       country: '',
       disabled: true,
@@ -21,7 +22,7 @@ class DSUser {
       passwordExpirationTime: initialDate,
       passwordRetryCount: 0,
       profilePicture: '',
-      provider: '',
+      domain: '',
       removable: false,
       state: '',
       username: '',
@@ -58,13 +59,13 @@ class DSUser {
     return _private.get(this).id;
   }
 
-  init(uid, provider = 'default') {
+  init(uid, domain = 'default') {
     const p = _private.get(this);
     if (p.username !== uid) {
       throw new Error(`User object incorrectly instantiated. '${p.username}' should have been '${uid}'`);
     }
 
-    p.provider = provider;
+    p.domain = domain;
   }
 
   static initFromObj(dsUser, userInfo) {
@@ -86,6 +87,10 @@ class DSUser {
     return _private.get(this).locked;
   }
 
+  get canChangePassword() {
+    return _private.get(this).canChangePassword;
+  }
+
   get passwordExpirationTime() {
     return _private.get(this).passwordExpirationTime;
   }
@@ -98,8 +103,8 @@ class DSUser {
     return _private.get(this).passwordRetryCount;
   }
 
-  get provider() { // Readonly
-    return _private.get(this).provider;
+  get domain() { // Readonly
+    return _private.get(this).domain;
   }
 
   get removable() { // Readonly
@@ -113,7 +118,7 @@ class DSUser {
   async setDisabled(disabled) {
     _private.get(this).disabled = disabled;
     if (disabled) {
-      await clearSession(this.username, this.provider);
+      await clearSession(this.username, this.domain);
     }
   }
 
@@ -132,11 +137,12 @@ class DSUser {
     _private.get(this).groups = [...groups];
   }
 
-  async setId(id) {
+  async setId(id) { // eslint-disable-line no-unused-vars
     throw new Error(NO_SET_IN_BASE); // You MUST override id and not call super.setId();
   }
 
-  async setLastLogin(date) { // Only called by SSO?
+  async setLastLogin(date) { // eslint-disable-line no-unused-vars
+    // Only called by SSO? Delete?
     throw new Error(NO_SET_IN_BASE); // You MUST override lastLogin and not call super.setLastLogin();
   }
 
@@ -147,7 +153,7 @@ class DSUser {
   async setLocked(locked) {
     _private.get(this).locked = locked;
     if (locked) {
-      await clearSession(this.username, this.provider);
+      await clearSession(this.username, this.domain);
     }
   }
 
@@ -155,10 +161,14 @@ class DSUser {
     throw new Error(NO_SET_IN_BASE); // You MUST override setPassword and not call super.setPassword();
   }
 
+  async setCanChangePassword(date) {
+    _private.get(this).canChangePassword = date;
+  }
+
   async setPasswordExpirationTime(date) {
     _private.get(this).passwordExpirationTime = date;
     if (date.valueOf() < Date.now()) {
-      await clearSession(this.username, this.provider);
+      await clearSession(this.username, this.domain);
     }
   }
 
@@ -168,21 +178,21 @@ class DSUser {
 
   toJSON() {
     const p = _private.get(this);
-    const { address1, address2, city, country, disabled, email, firstname, id, lastLogin, lastname, locked, modifiable, passwordExpirationTime, passwordRetryCount, profilePicture, provider, removable, state, username, zip, canChangePassword, deleted, passwordExpirationWarned, roles } = p;
-    //const { disabled, email, firstname, id, lastname, locked, provider, removable, username } = p;
+    const { address1, address2, city, country, disabled, email, firstname, id, lastLogin, lastname, locked, modifiable, passwordExpirationTime, passwordRetryCount, profilePicture, domain, removable, state, username, zip, canChangePassword, deleted, passwordExpirationWarned, roles } = p;
+    //const { disabled, email, firstname, id, lastname, locked, domain, removable, username } = p;
     const groups = p.groups ? [...p.groups] : undefined;
 
     return {
-      id, username, provider, firstname, lastname, email, disabled, lastLogin, locked, modifiable, removable, deleted,
+      id, username, domain, firstname, lastname, email, disabled, lastLogin, locked, modifiable, removable, deleted,
       passwordExpirationTime, passwordRetryCount, canChangePassword, passwordExpirationWarned, passwordExpired: this.passwordExpired, 
       address1, address2, city, state, zip, country, profilePicture, groups, roles
     };
   }
 }
 
-async function clearSession(username, provider) {
+async function clearSession(username, domain) {
   if (typeof DSUser.purgeSession === 'function') {
-    await DSUser.purgeSession(username, provider);
+    await DSUser.purgeSession(username, domain);
   }
 }
 

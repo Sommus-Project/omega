@@ -13,7 +13,7 @@ describe('Tests for API: src/api/groups/(groupName)/users.js', () => {
   const req = {
     user: {
       username: 'tomthumb',
-      provider: 'default'
+      domain: 'default'
     },
     query: {
       /*
@@ -22,7 +22,7 @@ describe('Tests for API: src/api/groups/(groupName)/users.js', () => {
       order
       */
     },
-    dirService(provider) { // eslint-disable-line no-unused-vars
+    dirService(domain) { // eslint-disable-line no-unused-vars
       return {
         setUsersForGroup(groupName, memberList, isNewGroup) { // eslint-disable-line no-unused-vars
           if (groupName === 'error') {

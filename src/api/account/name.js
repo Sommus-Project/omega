@@ -1,8 +1,8 @@
 /* eslint-env omega/api */
-const VALID_USERNAME = /^.+$/i;
+const VALID_NAME = /^.+$/i;
 
 /**
- * @api {put} /api/account/name Set user name
+ * @api {put} /api/account/name Set user's name
  * @apiGroup Account
  * @apiDescription Set the name for the logged in user.
  * * This is done by calling `User.setName` of the user object that was obtained from `DirectoryService` for the logged in user.
@@ -16,17 +16,17 @@ const VALID_USERNAME = /^.+$/i;
  * @apiResponseExample <204> User name changed
  */
 async function doPut({ data, req }) {
-  const { name } = data;
-  const { username, provider } = req.user;
-  if (Object.keys(data).length !== 1 || !VALID_USERNAME.test(name)) {
+  const { firstname, lastname } = data;
+  const { username, domain } = req.user;
+  if (Object.keys(data).length !== 2 || !VALID_NAME.test(firstname) || !VALID_NAME.test(lastname)) {
     req.usageLog.info(`User ${username} send invalid parameters`);
     return new HttpError(400, 'Invalid parameters sent.');
   }
 
-  const ds = req.dirService(provider);
+  const ds = req.dirService(domain);
   const user = ds.getUser(username);
-  req.usageLog.info(`User ${username} changing their name to ${name}`);
-  await user.setName(name);
+  req.usageLog.info(`User ${username} changing their name to ${firstname} ${lastname}`);
+  await user.setName(data);
 }
 doPut.loggedIn = true;
 

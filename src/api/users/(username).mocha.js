@@ -13,9 +13,9 @@ describe('Tests for API: src/api/users/(username).js', () => {
   const req = {
     user: {
       username: 'tomthumb',
-      provider: 'default'
+      domain: 'default'
     },
-    dirService(provider) { // eslint-disable-line no-unused-vars
+    dirService(domain) { // eslint-disable-line no-unused-vars
       return {
         deleteUser(username) {
           const user = users[username];

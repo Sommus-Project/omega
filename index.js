@@ -144,7 +144,7 @@ function initOmega(config = {}) { //eslint-disable-line complexity
   // Setup Session Management
   const sessionManager = new SessionManager(options.sessionManager);
   DSUser.purgeSession = sessionManager.invalidateUser.bind(sessionManager);
-  const dirService = directoryService(options.providers);
+  const dirService = directoryService(options.domains);
 
   //********************************************************************************
   // Setup Express Application

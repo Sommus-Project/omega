@@ -2,7 +2,8 @@ const omega = require('..');
 const SqlUser = require('./lib/directoryService/SqlUser');
 const SqlService = require('./lib/directoryService/SqlService');
 const SQL_CONFIG = require('./lib/SQL_CONFIG');
-//const User = require('./lib/User');
+const User = require('./lib/User');
+const jwt = require('./lib/jwt');
 const APP_TITLE = 'Sample Omega App';
 console.info(`\x1B]0;${APP_TITLE}\x07\x1B[95m${APP_TITLE}\x1B[0m`);
 
@@ -17,30 +18,29 @@ async function initAppFn(app, options) { // eslint-disable-line no-unused-vars
 }
 
 async function initReqFn(req, res, options) { // eslint-disable-line no-unused-vars
-  req.user = { provider: 'default', id: 1 };
-  /*
-  const sid = req.cookies[SESSION_COOKIE] || 1;
-  if (sid) {
+  // BEGIN TODO: Move this block into regular Omega
+  const { SESSION_COOKIE = 'session' } = req;
+  res.locals.user = req.user = new User();
+  const sessionToken = req.cookies[SESSION_COOKIE];
+  if (sessionToken) {
     req.rest.onSend(sender => {
       // Set session id for all calls to `req.rest`
-      sender.setCookie(SESSION_COOKIE, `"${sid}"`, false);
+      sender.setCookie(SESSION_COOKIE, sessionToken, false);
     })
+
+    try {
+      debugger
+      const decoded = await jwt.verify(sessionToken);
+      await req.user.init(req, decoded); // Initialize the user based on who is logged in.
+    }
+
+    catch (ex) {
+      console.error(ex.stack);
+    }
   }
 
-  try {
-    // Create a new User object
-    var user = new User();
-    await user.init(req, sid)
-
-    // Save the user object for use by the rest of the app.
-    req.user = user;
-    res.locals.user = user;
-  }
-
-  catch (ex) {
-    console.error(ex.stack);
-  }
-  */
+  console.log(`User ${req.user.loggedIn ? 'is' : 'is not'} logged in.`);
+  // END TODO
 }
 
 const config = {
@@ -53,7 +53,7 @@ const config = {
   httpsPort: process.env.PORTS || 5001,
   initAppFn,
   initReqFn,
-  providers: {
+  domains: {
     default: {
       User: SqlUser,
       service: SqlService(({db:SQL_CONFIG}))

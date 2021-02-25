@@ -1,7 +1,5 @@
 /* eslint-env omega/api */
 
-const SESSION_COOKIE = require('./SESSION_COOKIE');
-
 //*****************************
 // API Functions
 //
@@ -22,7 +20,7 @@ const SESSION_COOKIE = require('./SESSION_COOKIE');
  * @apiPermissions (none)
  * @apiParam (body) username the username of the user loggin in.
  * @apiParam (body) password the password of the user loggin in.
- * @apiParam (body) [provider="default"] the provider of the user loggin in.
+ * @apiParam (body) [domain="default"] the domain of the user loggin in.
  * @apiRequestExample <200> Logged in
  * {
  *   "username": "dogbert",
@@ -56,14 +54,16 @@ const SESSION_COOKIE = require('./SESSION_COOKIE');
  */
 async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
   // TODO: ??If logged in then clear previous session??
-  const { username, password, provider = 'default' } = data;
-  const ds = req.dirService(provider);
+  const { SESSION_COOKIE = 'session' } = req;
+  const { username, password, domain = 'default' } = data;
+  const ds = req.dirService(domain);
   try {
     let headers;
     const authenticated = await ds.authenticate(username, password);
     if (authenticated) {
       req.usageLog.info(`User ${username} logged in.`);
-      const sessionId = await req.sessionManager.createSession(username, provider);
+      const sessionId = await req.sessionManager.createSession(username, domain);
+      console.log({sessionId});
       headers = {
         'set-cookie': `${SESSION_COOKIE}=${sessionId}; Path=/; HttpOnly; Secure;`
       };
@@ -94,6 +94,9 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
       }
 
       return new HttpResponse(headers, user.toJSON(), status);
+    }
+    else {
+      console.log('login failed');
     }
   }
 
@@ -138,10 +141,10 @@ If the user entered the wrong \`username\` or \`password\`, or if the user accou
         required: true
       },
       {
-        name: 'provider',
+        name: 'domain',
         type: 'string',
         defaultValue: 'default',
-        description: 'The provider of the user loggin in'
+        description: 'The domain of the user loggin in'
       }
     ]
   },

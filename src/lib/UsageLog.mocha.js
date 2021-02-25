@@ -119,11 +119,11 @@ describe('UsageLog tests', () => {
 
   it('should work with a user object', (done) => {
     req.user = {
-      provider: 'bedrock',
+      domain: 'bedrock',
       username: 'fred'
     };
 
-    expectedData.user = `${req.user.username}@${req.user.provider}`;
+    expectedData.user = `${req.user.username}@${req.user.domain}`;
     const ul = new UsageLog(req); // eslint-disable-line no-unused-vars
     doResFinishCb();
     setTimeout(() => {
@@ -136,11 +136,11 @@ describe('UsageLog tests', () => {
 
   it('should work with extra error', (done) => {
     req.user = {
-      provider: 'bedrock',
+      domain: 'bedrock',
       username: 'fred'
     };
 
-    expectedData.user = `${req.user.username}@${req.user.provider}`;
+    expectedData.user = `${req.user.username}@${req.user.domain}`;
     const ul = new UsageLog(req);
     ul.error('error message');
     doResFinishCb();
@@ -190,7 +190,7 @@ describe('UsageLog tests', () => {
     const ul1 = new UsageLog(req);
 
     req.user = {
-      provider: 'bedrock',
+      domain: 'bedrock',
       username: 'fred'
     };
     req.originalUrl = '/url/for/testing?dogs=woof';
@@ -210,7 +210,7 @@ describe('UsageLog tests', () => {
         }
       };
 
-      expected[1].user = `${req.user.username}@${req.user.provider}`;
+      expected[1].user = `${req.user.username}@${req.user.domain}`;
       expected[1].parameters = 'dogs=woof';
       expected[1].timestamp = fsData[0].data[1].timestamp;
       expected[1].level = SECURITY_LEVEL_STR[SEVERITY_LEVEL.WARNING];
@@ -229,7 +229,7 @@ describe('UsageLog tests', () => {
     const ul1 = new UsageLog(req);
 
     req.user = {
-      provider: 'bedrock',
+      domain: 'bedrock',
       username: 'fred'
     };
     req.originalUrl = '/url/for/testing?dogs=woof';
@@ -249,7 +249,7 @@ describe('UsageLog tests', () => {
         }
       };
 
-      expected[1].user = `${req.user.username}@${req.user.provider}`;
+      expected[1].user = `${req.user.username}@${req.user.domain}`;
       expected[1].parameters = 'dogs=woof';
       expected[1].timestamp = fsData[0].data[1].timestamp;
       expected[1].level = SECURITY_LEVEL_STR[SEVERITY_LEVEL.WARNING];
@@ -268,7 +268,7 @@ describe('UsageLog tests', () => {
     const ul1 = new UsageLog(req);
 
     req.user = {
-      provider: 'bedrock',
+      domain: 'bedrock',
       username: 'fred'
     };
     req.originalUrl = '/url/for/testing?dogs=woof';
@@ -289,7 +289,7 @@ describe('UsageLog tests', () => {
         }
       };
 
-      expected[1].user = `${req.user.username}@${req.user.provider}`;
+      expected[1].user = `${req.user.username}@${req.user.domain}`;
       expected[1].parameters = 'dogs=woof';
       expected[1].timestamp = fsData[0].data[1].timestamp;
       expected[1].level = SECURITY_LEVEL_STR[SEVERITY_LEVEL.WARNING];

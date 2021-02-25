@@ -3,6 +3,7 @@ const MemoryStore = require('./MemoryStore');
 //const RedisStore = require('./RedisStore');
 const asyncForEach = require('../asyncForEach');
 const asyncSome = require('../asyncSome');
+const jwt = require('../jwt');
 const DEFAULT_TIMEOUT = 20; // 20 minutes
 
 class SessionManager {
@@ -30,11 +31,9 @@ class SessionManager {
     await asyncForEach(this._stores, async store => await store.destroy());
   }
 
-  async createSession(username, provider) {
-    const hash = crypto.createHash('sha256');
-    hash.update(username + Date.now());
-    const sessionId = hash.digest('hex');
-    await this.addSession(sessionId, username, provider);
+  async createSession(username, domain) {
+    const sessionId = jwt.sign({ username, domain });
+    await this.addSession(sessionId, username, domain);
     return sessionId;
   }
 
@@ -70,16 +69,16 @@ class SessionManager {
     await asyncForEach(this._stores, async store => await store.touchSession(sessionId));
   }
 
-  async addSession(sessionId, username, provider) {
-    await asyncForEach(this._stores, async store => await store.addSession(sessionId, username, provider));
+  async addSession(sessionId, username, domain) {
+    await asyncForEach(this._stores, async store => await store.addSession(sessionId, username, domain));
   }
 
   async invalidateSession(sessionId) {
     await asyncForEach(this._stores, async store => await store.invalidateSession(sessionId));
   }
 
-  async invalidateUser(username, provider) {
-    await asyncForEach(this._stores, async store => await store.invalidateUser(username, provider));
+  async invalidateUser(username, domain) {
+    await asyncForEach(this._stores, async store => await store.invalidateUser(username, domain));
   }
 }
 

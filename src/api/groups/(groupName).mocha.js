@@ -11,7 +11,7 @@ describe('Tests for API: src/api/groups/(groupName).js', () => {
   const req = {
     user: {
       username: 'tomthumb',
-      provider: 'default'
+      domain: 'default'
     },
     query: {
       /*
@@ -20,7 +20,7 @@ describe('Tests for API: src/api/groups/(groupName).js', () => {
       order
       */
     },
-    dirService(provider) { // eslint-disable-line no-unused-vars
+    dirService(domain) { // eslint-disable-line no-unused-vars
       return {
         deleteGroup(groupName) {
           if (groupName === 'error') {
