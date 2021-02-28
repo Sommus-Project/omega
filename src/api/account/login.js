@@ -63,7 +63,6 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
     if (authenticated) {
       req.usageLog.info(`User ${username} logged in.`);
       const sessionId = await req.sessionManager.createSession(username, domain);
-      console.log({sessionId});
       headers = {
         'set-cookie': `${SESSION_COOKIE}=${sessionId}; Path=/; HttpOnly; Secure;`
       };
@@ -72,7 +71,7 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
       if (thereIsANextStep) {
         const step = 'Do the next step';
         headers['X-Next-Step'] = step;
-        console.log('Next Step: returning a 401');
+        //console.info('Next Step: returning a 401');
         return new HttpError(401, {
           data: { code: 0, reason: step },
           headers
@@ -80,6 +79,7 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
       }
 
       const user = await ds.getUser(username);
+      user.setLastLogin(user.id);
       let status = 200;
       if (user.locked || user.disabled) {
         status = 401;
@@ -95,9 +95,8 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
 
       return new HttpResponse(headers, user.toJSON(), status);
     }
-    else {
-      console.log('login failed');
-    }
+
+    req.usageLog.warn('login failed');
   }
 
   catch (ex) {

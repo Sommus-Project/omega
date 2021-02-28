@@ -146,7 +146,7 @@ class DSUser {
     throw new Error(NO_SET_IN_BASE); // You MUST override lastLogin and not call super.setLastLogin();
   }
 
-  async setLastame(lastname) {
+  async setLastname(lastname) {
     _private.get(this).lastname = lastname
   }
 

@@ -1,13 +1,22 @@
 const bcrypt = require('bcrypt');
-//const asyncForEach = require('../asyncForEach');
+const asyncForEach = require('../asyncForEach');
 //const sortWithoutCase = require('../sortWithoutCase');
 const { errors, HttpError } = require('../../..');
 const { AttributeError } = errors.NoEntityError;
+const sortWithoutCase = require('../sortWithoutCase');
 const MySql = require('../MySql');
+const GROUP_CACHE_RESET_TIME = 5*60*60*1000; // 5 minutes
+let groupCache = [];
 
 const comparePw = /*async*/ (pw, hash) => bcrypt.compare(pw, hash);
 const encodePw = /*async*/ (pw) => bcrypt.hash(pw, 10);
 
+// ✓ 2021-02-27 - Finished
+function clearGroupsCache() {
+  groupCache = [];
+}
+
+// ✓ 2021-02-27 - Finished
 function createInsert(table, data) {
   const fields = [];
   const vals = [];
@@ -27,6 +36,7 @@ function createInsert(table, data) {
   return { sql, params };
 }
 
+// ✓ 2021-02-27 - Finished
 function createUpdate(table, idField, idValue, data) {
   const fields = [];
   const params = [];
@@ -45,12 +55,14 @@ function createUpdate(table, idField, idValue, data) {
   return { sql, params };
 }
 
+// ✓ 2021-02-27 - Finished
 function normalizeGroupsAndRoles(list) {
   if (list) {
     return list.map(obj => obj.name.toUpperCase().replace(/-/g, '_')).sort();
   }
 }
 
+// ✓ 2021-02-27 - Finished
 function normalizeUserInfo(userInfoList) {
   return userInfoList.map(userInfo => {
     const passwordExpirationTime = new Date(userInfo.expires_on)
@@ -85,6 +97,19 @@ function normalizeUserInfo(userInfoList) {
   });
 }
 
+// ✓ 2021-02-27 - Finished
+async function validateGroups(mySql, groups) {
+  const len = groups.length;
+  if (len > 0) {
+    let sql = `SELECT COUNT(*) count FROM groups WHERE id in (${groups.join(', ')})`;
+    const { count } = await mySql.queryOne(sql);
+
+    if (len !== count) {
+      throw new Error(`One, or more, of the groups are invalid`);
+    }
+  }
+}
+
 function SqlService(serviceConfig) {
   const CONFIG = {
     // TODO: Need a way to set these
@@ -95,17 +120,13 @@ function SqlService(serviceConfig) {
     PASSWORD_MAX_FAILURE: 3
   }
 
-  // ✓ 2021-02-23 - 'authenticate' seems to be finished
+  // ✓ 2021-02-23 - Finished
   async function authenticate(username, password) {
     const mySql = new MySql(serviceConfig.db);
     try {
-      //const sql = 'SELECT * FROM users WHERE deleted=0 AND username = ?';
-      const sql = `SELECT u.id, u.disabled, NOW() > pw.expires_on locked, pw.password
-	      FROM users u
+      const sql = `SELECT u.id, u.disabled, NOW() > pw.expires_on locked, pw.password FROM users u
         LEFT JOIN passwords pw ON pw.user_id=u.id
-        WHERE deleted=0
-          AND username=?
-          AND pw.active=1`;
+        WHERE deleted=0 AND pw.active=1 AND username=?`;
       const data = await mySql.queryOne(sql, [username]);
       return (data.id && await comparePw(password, data.password));
     }
@@ -120,13 +141,61 @@ function SqlService(serviceConfig) {
     }
   }
 
-  // ✓ 2021-02-23 - 'createUser' seems to be finished EXCEPT for groups
-  async function createUser(requestor, values, tempPassword = true) {
-    console.info(`${requestor} calling createUser`);
+  // ✓ 2021-02-27 - Finished
+  async function createGroup(requestor, name, description, users = []) {
+    const mySql = new MySql(serviceConfig.db);
+    try {
+      let fields = {
+        name,
+        description,
+        created_by: requestor,
+        updated_by: requestor
+      };
+      let { sql, params } = createInsert('groups', fields);
+      const group_id = await mySql.insert(sql, params);
+      clearGroupsCache()
 
+      if (group_id) {
+        if (users.length > 0) {
+          await asyncForEach(users, async user_id => {
+            fields = {
+              user_id,
+              group_id,
+              created_by: requestor,
+              updated_by: requestor
+            }
+
+            ({ sql, params } = createInsert('user_groups', fields));
+            await mySql.insert(sql, params);
+          });
+        }
+
+        return group_id;
+      }
+
+      throw new HttpError(500, "Unable to create group");
+    }
+
+    catch (ex) {
+      console.error(ex.stack);
+      throw (ex);
+    }
+
+    finally {
+      mySql.close();
+    }
+  }
+
+  // ✓ 2021-02-25 - 'createUser' seems to be finished
+  // • Adds user
+  // • Adds password
+  // • Adds user to groups
+  // - Still need to validate groups are good before inserting user
+  // ------------------------------- NEED TO FINISH -------------------------------
+  async function createUser(requestor, values, tempPassword = true) {
     const {
       username, firstname, lastname, address1, address2 = '',
-      city, state, zip, country, email, password, groups
+      city, state, zip, country, email, password, groups = []
     } = values;
 
     const mySql = new MySql(serviceConfig.db);
@@ -136,6 +205,8 @@ function SqlService(serviceConfig) {
       if (data.id) {
         throw new Error(`User "${username}" already exists.`);
       }
+
+      await validateGroups(mySql, groups);
 
       let fields = {
         username,
@@ -151,23 +222,25 @@ function SqlService(serviceConfig) {
         created_by: requestor,
         updated_by: requestor
       };
-
       const { sql: createSql, params } = createInsert('users', fields);
       const user_id = await mySql.insert(createSql, params);
+
       if (user_id) {
         fields = {
           user_id,
           password: await encodePw(password),
-          expired: 0,
-          expires_on: { value: tempPassword ? 'NOW()' : `NOW() + INTERVAL ${CONFIG.PASSWORD_MAX_AGE} day` },
-          can_change_on: { value: tempPassword ? 'NOW()' : `NOW() + INTERVAL ${CONFIG.PASSWORD_MIN_AGE} DAY` },
+          active: 1,
+          expires_on: { value: tempPassword ? 'NOW() - INTERVAL 1 day' : `NOW() + INTERVAL ${CONFIG.PASSWORD_MAX_AGE} day` },
+          can_change_on: { value: tempPassword ? 'NOW() - INTERVAL 1 day' : `NOW() + INTERVAL ${CONFIG.PASSWORD_MIN_AGE} DAY` },
           created_by: requestor
         }
         const { sql: createPasswordSql, params: p2 } = createInsert('passwords', fields);
         await mySql.insert(createPasswordSql, p2);
 
         if (groups.length > 0) {
-          // TODO: Add the user to supplied groups.
+          const values = groups.map(group => `(${user_id}, ${Number(group)}, ${requestor}, ${requestor})`).join(', ');
+          const sql = `INSERT INTO user_groups (user_id, group_id, created_by, updated_by) VALUES ${values}`
+          const resp = await mySql.insert(sql);
         }
 
         return user_id;
@@ -186,37 +259,40 @@ function SqlService(serviceConfig) {
     }
   }
 
+  // ✓ 2021-02-27 - Finished
   async function delGroup(groupName) { // eslint-disable-line no-unused-vars
-    console.info('calling delGroup');
-    /*
-    const group = await getGroupByName(groupName);
-    if (!group) {
-      throw new InvalidActionError('NOT_FOUND', `Group ${groupName} was not found.`);
+    const existingGroup = await getGroupByName(groupName);
+    if (existingGroup == null) {
+      return;
     }
-    // Make sure this group can be removed
-    if (group.removable) {
-      // Get the list of users that are members of this group
-      const { users } = await getGroupUsers(groupName);
-      let client = await connectRoot();
-      const groupDn = `cn=${groupName},${GROUPS_DN}`;
-      // Delete the group
-      await client.del(groupDn);
-      // Clear the group cache
+    if (!existingGroup.removable) {
+      throw new Error('Unable to delete a protected group');
+    }
+
+    const mySql = new MySql(serviceConfig.db);
+    try {
+      const groupId = existingGroup.id;
+      let sql = `DELETE FROM user_groups WHERE group_id=?`;
+      let resp = await mySql.queryOne(sql, [groupId]);
+
+      sql = `DELETE FROM groups WHERE id=?`;
+      resp = await mySql.queryOne(sql, [groupId]);
+
       clearGroupsCache();
-      // Remove the group from the user
-      await asyncForEach(users, async ({ username }) => {
-        await delAttr(`uid=${username},${PEOPLE_DN}`, 'memberof', groupDn);
-      });
     }
-    else {
-      throw new InvalidActionError('UNABLE_TO_DELETE', `Group ${groupName} is non-removable`);
+
+    catch (ex) {
+      console.error(ex.stack);
+      return false;
     }
-    */
+
+    finally {
+      mySql.close();
+    }
   }
 
-  // ✓ 2021-02-23 - 'delUser' seems to be finished
+  // ✓ 2021-02-27 - Finished
   async function delUser(requestor, username) {
-    console.info(`${requestor} calling delUser[${username}]`);
     const mySql = new MySql(serviceConfig.db);
     try {
       const data = {
@@ -238,111 +314,86 @@ function SqlService(serviceConfig) {
     }
   }
 
+  // ✓ 2021-02-27 - Finished
   async function getConfig(key) {
     return CONFIG[key];
   }
 
+  // ✓ 2021-02-27 - Finished
   async function getGroupByName(groupName) { // eslint-disable-line no-unused-vars
-    console.info('calling getGroupByName');
-    /*
     await getGroups();
-    let groupInfo;
-    groupCache.some(group => {
-      if (groupName === group.name) {
-        groupInfo = group;
-        return true;
-      }
-    });
-
-    return groupInfo;
-    */
+    const groupInfo = groupCache.filter(group => groupName === group.name);
+    return groupInfo[0];
   }
 
+  // ✓ 2021-02-27 - Finished
   async function getGroupUsers(groupName, { start = 0, limit = 12000, order = 'asc' } = {}) { // eslint-disable-line no-unused-vars
     console.info('calling getGroupUsers');
-    /*
-    const client = await connectRoot();
-    const opts = {
-      filter: `(memberof=cn=${escape(groupName)},${GROUPS_DN})`,
-      scope: 'sub',
-      attributes: ['cn', 'uid']
+    const mySql = new MySql(serviceConfig.db);
+    let members;
+    try {
+      const sql = `SELECT u.id, u.username, u.firstname, u.lastname
+        FROM users u
+        LEFT JOIN user_groups ug ON ug.user_id = u.id
+        LEFT JOIN groups g ON g.id = ug.group_id
+        WHERE u.deleted=0 AND g.name=?
+        GROUP BY u.id;`;
+      members = [...await mySql.query(sql, groupName)];
     }
-    const resp = await client.search(PEOPLE_DN, opts);
-    const groupInfo = resp.searchEntries;
 
-    if (groupInfo) {
-      const members = groupInfo.map(info => ({ name: info.cn, username: info.uid }));
-      const total = members.length;
-      const users = members.sort(sortWithoutCase(order, 'username')).slice(start, start + limit);
-      const count = users.length;
-      return {
-        count,
-        start,
-        total,
-        users
-      };
+    catch (ex) {
+      console.error(ex.stack);
+      return false;
     }
-    */
+
+    finally {
+      mySql.close();
+    }
+
+    const total = members.length;
+    const users = members.sort(sortWithoutCase(order, 'username')).slice(start, start + limit);
+    const count = users.length;
+    return {
+      users,
+      start,
+      count,
+      total
+    };
   }
 
+  // ✓ 2021-02-27 - Finished
   async function getGroups({ start = 0, limit = 12000, order = 'asc' } = {}) { // eslint-disable-line no-unused-vars
-    console.info('calling getGroups');
-    /*
     if (groupCache.length === 0) {
-      const client = await connectRoot();
-      const opts = {
-        filter: 'objectClass=posixGroup',
-        scope: 'sub',
-        attributes: GROUP_ATTRIBUTES
+      console.info('getting groups from DB');
+      const mySql = new MySql(serviceConfig.db);
+      try {
+        const sql = `SELECT id, name, description, removable FROM groups`;
+        groupCache = [...await mySql.query(sql)];
+        groupCacheTimeout = setTimeout(clearGroupsCache, GROUP_CACHE_RESET_TIME);
       }
 
-      const resp = await client.search(GROUPS_DN, opts);
-      groupCache = normalizeGroups(resp.searchEntries); // normalizeGroups was removed
-      groupCacheTimeout = setTimeout(clearGroupsCache, GROUP_CACHE_RESET_TIME);
+      catch (ex) {
+        console.error(ex.stack);
+        return false;
+      }
+
+      finally {
+        mySql.close();
+      }
     }
 
     const total = groupCache.length;
     const groups = groupCache.sort(sortWithoutCase(order, 'name')).slice(start, start + limit);
     const count = groups.length;
     return {
-      count,
       groups,
       start,
+      count,
       total
     };
-    */
   }
 
-  async function getNextGroupGid(client) { // eslint-disable-line no-unused-vars
-    console.info('calling getNextGroupGid');
-    /*
-    const opts = {
-      scope: 'sub',
-      attributes: ['gidNumber']
-    }
-    const resp = await client.search(GROUPS_DN, opts);
-    return '' + (resp.searchEntries.reduce((acc, obj) => {
-      const nGid = Number(obj.gidNumber);
-      return (nGid > acc ? nGid : acc);
-    }, 999) + 1);
-    */
-  }
-
-  async function getNextPersonUid(client) { // eslint-disable-line no-unused-vars
-    console.info('calling getNextPersonUid');
-    /*
-    const opts = {
-      scope: 'sub',
-      attributes: ['uidNumber']
-    }
-    const resp = await client.search(PEOPLE_DN, opts);
-    return '' + (resp.searchEntries.reduce((acc, obj) => {
-      const nUid = Number(obj.uidNumber);
-      return (nUid > acc ? nUid : acc);
-    }, 999) + 1);
-    */
-  }
-
+  // ------------------------------- NEED TO FINISH -------------------------------
   async function getPasswordExpirationTime(client, uid) { // eslint-disable-line no-unused-vars
     console.info('calling getPasswordExpirationTime');
     /*
@@ -361,45 +412,49 @@ function SqlService(serviceConfig) {
     */
   }
 
-  // ✓ 2021-02-23 - 'getUserById' seems to be finished
+  // ✓ 2021-02-27 - Finished
   async function getUserById(uid) {
     const mySql = new MySql(serviceConfig.db);
 
     try {
-      const sql = `SELECT u.id, u.username, u.firstname, u.email, u.disabled, 
-        NOW() > pw.expires_on locked, u.modifiable,	u.deleted, u.pwd_exp_warned,
-        IFNULL(u.pwd_retry_count, 0) pwd_retry_count, IFNULL(u.last_login,
-        NOW() - INTERVAL 1 year) last_login, pw.password, pw.expires_on,
-        pw.can_change_on, u.lastname, u.address1, IFNULL(u.address2, '') address2,
-        u.city, u.state, u.zip, u.country, IFNULL(u.profile_picture, '') profile_picture
+      let sql = `SELECT u.id, u.username, u.firstname, u.lastname, u.email,
+        u.disabled, u.modifiable,	u.deleted, NOW() > pw.expires_on locked,
+        pw.password, u.pwd_exp_warned, IFNULL(u.pwd_retry_count, 0) pwd_retry_count, 
+        DATE_FORMAT(IFNULL(u.last_login, NOW() - INTERVAL 1 year), "%Y-%m-%dT%T.000Z") last_login,
+        DATE_FORMAT(pw.expires_on, "%Y-%m-%dT%T.000Z") expires_on,
+        DATE_FORMAT(pw.can_change_on, "%Y-%m-%dT%T.000Z") can_change_on,
+        u.address1, IFNULL(u.address2, '') address2, u.city, u.state, u.zip, u.country,
+        IFNULL(u.profile_picture, '') profile_picture
 	      FROM users u
         LEFT JOIN passwords pw ON pw.user_id=u.id
         WHERE deleted=0
-          AND ${typeof id === 'number' ? 'id' : 'username'} = ?
+          AND ${typeof id === 'number' ? 'id' : 'username'}=?
           AND pw.active=1`
       const data = await mySql.queryOne(sql, [uid]);
       if (!data.id) {
+        console.warn(`No user found for "${uid}"`);
         return null;
       }
 
       data.groups = [];
       data.roles = [];
 
-      const groupSql = `SELECT g.id, g.name from groups g
+      sql = `SELECT g.id, g.name from groups g
         LEFT JOIN user_groups ug ON ug.group_id = g.id
         WHERE ug.user_id = ?
         ORDER BY g.name`
-      let temp = await mySql.query(groupSql, [data.id]);
+      let temp = await mySql.query(sql, [data.id]);
       if (temp && temp.length > 0) {
         data.groups = [...temp];
         const groupIds = data.groups.map(obj => obj.id);
         if (groupIds.length > 0) {
-          const rolesSql = `SELECT p.id, p.name from permissions p
+          sql = `SELECT p.id, p.name from permissions p
             LEFT JOIN group_permissions gp ON gp.permission_id = p.id
             WHERE gp.group_id in (${groupIds.join(',')})`
-          data.roles = [...(await mySql.query(rolesSql))||[]];
+          data.roles = [...(await mySql.query(sql))||[]];
         }
       }
+
       const ndata = normalizeUserInfo([data])[0];
       return ndata;
     }
@@ -415,7 +470,7 @@ function SqlService(serviceConfig) {
     }
   }
 
-  // ✓ 2021-02-23 - 'getUsers' seems to be finished
+  // ✓ 2021-02-27 - Finished
   async function getUsers(params = {}) {
     const mySql = new MySql(serviceConfig.db);
     try {
@@ -446,21 +501,14 @@ function SqlService(serviceConfig) {
     }
   }
 
-  async function getUsersForGroups() { // eslint-disable-line no-unused-vars
-    console.info('calling getUsersForGroups');
-    /*
-    const client = await connectRoot();
-    const opts = {
-      filter: 'objectClass=posixAccount',
-      scope: 'sub',
-      attributes: [MEMBER_OF, UID]
-    }
-
-    const { searchEntries } = await client.search(PEOPLE_DN, opts);
-    return normalizeUsersForGroups(searchEntries, ldapOptions).filter(user => !NONMODIFIABLE_USERS.includes(user.username));
-    */
+  // ✓ 2021-02-27 - Finished
+  async function isExistingGroup(groupName) {
+    const group = await getGroupByName(groupName);
+    console.log(!!group, JSON.stringify(group, 0, 2));
+    return !!group;
   }
 
+  // ------------------------------- NEED TO FINISH -------------------------------
   async function setAttr(requestor, userId, attr, value) {
     console.info('calling setAttr');
     // TODO: If typeof attr === 'object' then allow for
@@ -493,8 +541,8 @@ function SqlService(serviceConfig) {
     }
   }
 
+  // ✓ 2021-02-27 - Finished
   async function setPassword(requestor, user_id, password, forceChangeOnNextLogin = false) {
-    console.info('calling setPassword');
     const mySql = new MySql(serviceConfig.db);
 
     try {
@@ -541,15 +589,40 @@ function SqlService(serviceConfig) {
     }
   }
 
-  async function setGroupDescription(groupName, description) { // eslint-disable-line no-unused-vars
-    console.info('calling setGroupDescription');
-    /*
-    const dn = `cn=${groupName},${GROUPS_DN}`;
-    await setAttr(dn, DESCRIPTION, description);
-    clearGroupsCache();
-    */
+  // ✓ 2021-02-27 - Finished
+  async function setGroupDescription(requestor, groupName, description) { // eslint-disable-line no-unused-vars
+    const group = await getGroupByName(groupName);
+    console.log({group});
+    if (group) {
+      const mySql = new MySql(serviceConfig.db);
+
+      try {
+        // Set all existing password for this user to inactive
+        let data = {
+          description,
+          updated_by: requestor
+        }
+        let { sql, params } = createUpdate('groups', 'id', group.id, data);
+        await mySql.queryOne(sql, params);
+        clearGroupsCache();
+        return;
+      }
+
+      catch (ex) {
+        console.error('Failed to set password');
+        console.error(ex.stack);
+        throw new AttributeError(ex.code || 0, ex.message, `Unable to set the 'password' attribute.`);
+      }
+
+      finally {
+        mySql.close();
+      }
+    }
+
+    throw new Error('NOT_FOUND');
   }
 
+  // ------------------------------- NEED TO FINISH -------------------------------
   async function setUsersForGroup({ groupName, add: membersToAdd = [], del: membersToRemove = [] }) { // eslint-disable-line no-unused-vars
     console.info('calling setUsersForGroup');
     /*
@@ -562,10 +635,10 @@ function SqlService(serviceConfig) {
     });
     */
   }
-
   
   return {
     authenticate,
+    createGroup,
     createUser,
     delGroup,
     delUser,
@@ -575,7 +648,7 @@ function SqlService(serviceConfig) {
     getGroups,
     getUserById,
     getUsers,
-    getUsersForGroups,
+    isExistingGroup,
     setAttr,
     setGroupDescription,
     setPassword,

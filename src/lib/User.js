@@ -1,3 +1,13 @@
+
+function setReadOnlyData(_this, userInfo) {
+  // Protect Properties: Make them read only
+  const properties = Object.entries(userInfo).reduce((acc, [key, value]) => {
+    acc[key] = { enumerable: true, value };
+    return acc;
+  }, {});
+  Object.defineProperties(_this, properties);
+}
+
 class User {
   constructor() {
     this.groups = [];
@@ -30,13 +40,13 @@ class User {
     };
 
     if (!username) {
-      this.#setReadOnlyData(newUserData);
+      setReadOnlyData(this, newUserData);
       return false;
     }
 
     const ds = req.dirService(domain);
     const resp = await ds.getUser(username);
-    this.#setReadOnlyData(resp.toJSON());
+    setReadOnlyData(this, resp.toJSON());
     return true;
   }
 
@@ -58,15 +68,6 @@ class User {
 
   isUser (username, domain = 'default') {
     return (this.username === username && this.domain === domain);
-  }
-
-  #setReadOnlyData(userInfo) {
-    // Protect Properties: Make them read only
-    const properties = Object.entries(userInfo).reduce((acc, [key, value]) => {
-      acc[key] = { enumerable: true, value };
-      return acc;
-    }, {});
-    Object.defineProperties(this, properties);
   }
 }
 

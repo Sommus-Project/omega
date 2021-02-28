@@ -7,7 +7,9 @@ const MIN_IN_HOUR = 60;
 const { SEVERITY_LEVEL, SECURITY_LEVEL_STR} = require('./SEVERITY_LEVEL');
 const ANONYMOUS_USER = 'ANONYMOUS';
 const PRIMITIVE_TYPES = ['String', 'Boolea', 'Number']
-const REDACT_JSON_PATTERN = /((?:question|answer|password|passcode)\\*":\s*(\\*)")(?:[^"]+?[^,}])+?("[,}])/g;
+// TODO: Fix this pattern to correctly redact and not be too greedy
+//const REDACT_JSON_PATTERN = /((?:[a-z]*answer|[a-z]*password|[a-z]*passcode)\\?":\s*(\\?")?)(?:[^"]+?[^,}])+?(\\?"?[,}])/gi;
+const REDACT_JSON_PATTERN = /((?:[a-z]*answer|[a-z]*password|[a-z]*passcode)\\?":)\s*\\?"(?:[^"]*)"/gi;
 // Explanation of REDACT_JSON_PATTERN
 // We use a JSON string. This string might have several levels of escaping so the
 // double quote value can have no "\" character or one "\" or three "\\\"
@@ -26,11 +28,11 @@ class UsageLog {
 
     const [urlPath, parameters = ''] = req.originalUrl.split('?');
     const user = (req.user && req.user.username) ? `${req.user.username}@${req.user.domain}` : ANONYMOUS_USER;
-    const timestamp = formatTimestamp(new Date());
+    this.timestamp = Date.now();
 
     this.data = {
       client: req.headers['user-agent'],
-      extraInfo: {default:{}},
+      messages: [],
       host: req.hostname,
       ip: req.ip,
       nodeID: OS_HOST,
@@ -41,7 +43,7 @@ class UsageLog {
       requestBody: redact(req.body),
       requestID: req.headers.x_request_id || `node-${req.requestId}`,
       severity: SEVERITY_LEVEL.INFO,
-      timestamp,
+      timestamp: (new Date(this.timestamp)).toISOString(),
       urlPath,
       user,
       verb: req.method
@@ -54,33 +56,32 @@ class UsageLog {
   }
 
   critical(message) {
-    addExtra(this, SEVERITY_LEVEL.CRITICAL, message);
+    addMessage(this, SEVERITY_LEVEL.CRITICAL, message);
   }
 
   error(message) {
-    addExtra(this, SEVERITY_LEVEL.ERROR, message);
+    addMessage(this, SEVERITY_LEVEL.ERROR, message);
   }
 
   warn(message) {
-    addExtra(this, SEVERITY_LEVEL.WARNING, message);
+    addMessage(this, SEVERITY_LEVEL.WARNING, message);
   }
 
   info(message) {
-    addExtra(this, SEVERITY_LEVEL.INFO, message);
+    addMessage(this, SEVERITY_LEVEL.INFO, message);
   }
 
   debug(message) {
-    addExtra(this, SEVERITY_LEVEL.DEBUG, message);
+    addMessage(this, SEVERITY_LEVEL.DEBUG, message);
   }
 }
 
-function addExtra(log, severity, err) {
-  let text = (err instanceof Error) ? err.message : err;
+function addMessage(log, severity, err) {
+  let message = (err instanceof Error) ? err.message : err;
   const level = SECURITY_LEVEL_STR[severity];
-  const def = log.data.extraInfo.default;
+  const delta = Date.now()-log.timestamp;
 
-  def[level] = def[level] || [];
-  def[level].push(text);
+  log.data.messages.push({delta, level, message});
 
   if (severity < log.data.severity) {
     log.data.severity = severity;
@@ -107,30 +108,11 @@ function writeData(data) {
 
 const fmt2 = val => ('0'+val).slice(-2);
 
-function tzo(off) {
-  const sign = (off > 0) ? '-' : '+';
-  const h = Math.floor(off/MIN_IN_HOUR);
-  const m = off - (h*MIN_IN_HOUR);
-  return `${sign}${fmt2(h)}${fmt2(m)}`;
-}
-
-function formatTimestamp(date) {
-  const dd = fmt2(date.getDate());
-  const mm = fmt2(date.getMonth()+1);
-  const yy = date.getFullYear();
-  const h = fmt2(date.getHours());
-  const m = fmt2(date.getMinutes());
-  const s = fmt2(date.getSeconds());
-  const o = tzo(date.getTimezoneOffset());
-
-  return `${dd}/${mm}/${yy}:${h}:${m}:${s} ${o}`;
-}
-
 function redact(value='') {
   const isPrimitive = PRIMITIVE_TYPES.includes(value.constructor.toString().substr(9, 6));
   let temp = isPrimitive ? value : JSON.stringify(value);
   if (temp.constructor.toString().substr(9, 6) === 'String') {
-    return temp.replace(REDACT_JSON_PATTERN, '$1REDACTED$2$3');
+    return temp.replace(REDACT_JSON_PATTERN, '$1"REDACTED"');
   }
 
   return temp;

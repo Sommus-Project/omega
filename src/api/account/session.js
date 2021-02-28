@@ -2,7 +2,6 @@
 // API file: (groupid)
 // Source File: src/api/account/session.js
 // Generated on: 7/19/2019, 11:41:21 AM
-const SESSION_COOKIE = require('./SESSION_COOKIE');
 
 //*****************************
 // API Functions
@@ -55,6 +54,7 @@ doPut.loggedIn = true;
  * @apiResponseExample <204> Session was deleted
  */
 async function doDelete({ req }) { // eslint-disable-line no-unused-vars
+  const SESSION_COOKIE = req.SESSION_COOKIE || 'session';
   req.usageLog.info(`User ${req.user.username} logged out of session ${req.sessionId}`);
   await req.sessionManager.invalidateSession(req.sessionId);
   return new HttpResponse({

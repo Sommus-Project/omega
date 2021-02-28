@@ -68,6 +68,8 @@ doGet.auth = ['READ_GROUPS'];
  */
 async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
   const { name, description, users } = data;
+  const { id: requestor } = req.user;
+
   if (typeof name !== 'string' || !name) {
     throw new HttpError(400, 'You must provide a group "name".');
   }
@@ -82,7 +84,7 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
   const ds = req.dirService(domain);
 
   try {
-    const newGroup = await ds.createGroup(name, description, users);
+    const newGroup = await ds.createGroup(requestor, name, description, users);
     return new EntityCreated(`${req.path}/${name}`, newGroup);
   }
 
@@ -95,5 +97,35 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
   }
 }
 doPost.auth = ['WRITE_GROUPS'];
+/*
+Types are
+'bool'
+'number'
+'string'
+['bool'|'number'|'string']
+{
+  <fieldname>: {
+    type: '<type>',
+    length: <number>,
+    optional: true|false
+  },
+  ...
+}
+*/
+doPost.params = {
+  name: {
+    type: 'string',
+    length: 255
+  },
+  description: {
+    type: 'string',
+    length: 255
+  },
+  users: {
+    type: ['number'],
+    optional: true
+  }
+}
+
 
 apimodule.exports = { doGet, doPost };

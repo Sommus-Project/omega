@@ -18,7 +18,6 @@
 <script>
   addActionHandler('login', async (evt) => {
     const loginResp = await openDialog('loginDialog');
-    console.info(JSON.stringify(loginResp, 0, 2));
     const options = {
       body: JSON.stringify(loginResp.data),
       cache: 'no-cache',
@@ -28,13 +27,13 @@
       method: 'POST'
     }
     const resp = await fetch('/api/account/login', options);
-    console.info(resp);
     let json;
     try {
       json = await resp.json();
       console.info(JSON.stringify(json, 0, 2));
-      if (resp.status === 200) {
-        // TODO: Redirect to proper page or reload current page.
+      if (resp.status < 300) {
+        // TODO: Redirect to page defined in QS
+        window.location.reload();
       }
     }
     catch(ex) {
@@ -42,5 +41,22 @@
       console.error(await resp.text());
     }
   });
-</script>
 
+  addActionHandler('logout', async (evt) => {
+    const options = {
+      cache: 'no-cache',
+      method: 'DELETE'
+    }
+    const resp = await fetch('/api/account/session', options);
+    console.info(resp);
+    if (resp.status < 300) {
+      window.location.reload();
+    }
+    else {
+      json = await resp.json();
+      // TODO: Should we just kill the session cookie here?
+      console.error(`Error loggin out.`);
+      console.info(JSON.stringify(json, 0, 2));
+    }
+  });
+</script>

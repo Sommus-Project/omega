@@ -30,7 +30,7 @@ async function doGet({ groupName, req }) { // eslint-disable-line no-unused-vars
 
   throw404(req.path, `The group "${groupName}" does not exist.`);
 }
-doGet.auth = ['group-edit'];
+doGet.auth = ['READ_GROUPS'];
 
 /**
  * @api {delete} /api/groups/:groupName Delete (groupName)
@@ -63,6 +63,6 @@ async function doDelete({ groupName, req }) { // eslint-disable-line no-unused-v
     }
   }
 }
-doDelete.auth = ['group-edit'];
+doDelete.auth = ['DELETE_GROUPS'];
 
 apimodule.exports = { doGet, doDelete };

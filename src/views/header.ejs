@@ -1,0 +1,28 @@
+<%
+
+console.log(`Adding /js/actions.js to the head`);
+assets.head.js.push('/js/actions.js');
+assets.js.push('/js/dialog.js');
+assets.css.push('/css/dialog.css');
+
+const menu = [
+  {
+    name: "Home",
+    url: '/'
+  },
+  {
+    name: "User Manager",
+    url: '/users'
+  }
+]
+
+const menuItems = menu.map(item => `<li class="menu-item"><a href="${item.url}">${item.name}</a></li>`).join('\n    ');
+const loggedIn = (typeof user !== 'undefined' && user.loggedIn || false);
+const loginout = loggedIn ? `<span class="menu-extra">${user.username} <button class="login-item" action="logout">Log out</button></span>` : `<span class="menu-extra"><button class="login-item" action="login">Log in</button></span>`;
+%> 
+<header class="top-menu">
+  <ul class="menu-list">
+    <%- menuItems %>
+  </ul>
+  <%- loginout %>
+</header>

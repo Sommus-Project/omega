@@ -1,7 +1,7 @@
 module.exports = (app, options) => { // eslint-disable-line no-unused-vars
   app.locals.appName = 'Test Omega App';
   app.get('/', renderPage('home'));
-  app.get('/form', renderPage('form'));
+  app.get('/users', renderPage('users'));
 }
 
 function renderPage(page, cb) {

@@ -1,6 +1,6 @@
 const API_FILES = '**/!(*.mocha).js';
 const HTTP_STATUS_NO_CONTENT = 204;
-const HTTP_STATUS_UNAUTHORIZED = 401;
+const HTTP_STATUS_UNAUTHORIZED = 401; // Must include WWW-Authenticate header
 const HTTP_STATUS_FORBIDDEN = 403;
 const HTTP_STATUS_METHOD_NOT_ALLOWED = 405;
 const HTTP_STATUS_SERVER_ERROR = 500;
@@ -114,7 +114,7 @@ function initApiSystem(app, { appPath, showApiDocs = true, apiFolders } = {}) {
           }
           const keys = Object.keys(apiComponent);
 
-          debug(`\nLinking endpoints for ${apiFilePath}`);
+          console.log(`Linking endpoints for ${apiFilePath}`);
           debug(`Url: ${uri} - [${keys.join(', ')}]`);
           app.options(uri, apiCaller(OPTIONS, `(OPTIONS) ${uri}`, keys, debugFilePath));
           app.get(uri, apiCaller(apiComponent.doGet, `(GET) ${uri}`, keys, debugFilePath));
@@ -204,30 +204,43 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
       }
 
       try {
-        if (handler.deprecated) {
-          res.setHeader('X-Api-Deprecated', handler.deprecated);
-        }
-
-        let isAllowed = true;
-        if (handler.loggedIn === true) {
-          if (!req.user.loggedIn) {
-            throw new HttpError(HTTP_STATUS_UNAUTHORIZED, `Must be logged in to access endpoint [${action}].`);
+        const { deleted, locked, disabled } = req.user;
+        let isAllowed = !(deleted || disabled);
+        
+        if (isAllowed) {
+          if (handler.deprecated) {
+            res.setHeader('X-Api-Deprecated', handler.deprecated);
           }
-        }
 
-        if (handler.auth) {
-          if (typeof handler.auth === 'function') {
-            throw new HttpError(HTTP_STATUS_SERVER_ERROR, 'Omega does not support API auth functions yet.');
+          if (handler.loggedIn === true) {
+            if (!req.user.loggedIn) {
+              req.usageLog.warn('Attempted to access enpoint that requires logged in user');
+              throw new HttpError(HTTP_STATUS_UNAUTHORIZED, { title: `Must be logged in to access endpoint [${action}].`, headers: { 'WWW-Authenticate': 'Bearer' } });
+            }
           }
-          else {
-            isAllowed = req.user.inRole(handler.auth);
+
+          if (handler.auth) {
+            if (typeof handler.auth === 'function') {
+              throw new HttpError(HTTP_STATUS_SERVER_ERROR, 'Omega does not support API auth functions yet.');
+            }
+            else {
+              if (locked) {
+                isAllowed = false;
+              }
+              else {
+                isAllowed = req.user.inRole(handler.auth);
+              }
+            }
           }
         }
 
         if (!isAllowed) {
+          req.usageLog.warn('Attempted to access enpoint with insufficient rights');
           throw new HttpError(HTTP_STATUS_FORBIDDEN, `Unable to access to endpoint "${action}"`);
         }
 
+
+        req.usageLog.info(`Accessing enpoint ${action}`);
         if (handler.sessionTouch !== false && req.sessionManager && req.sessionId) {
           req.sessionManager.touchSession(req.sessionId);
         }
@@ -240,6 +253,7 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
           sendResponse(req, res)
         ).catch(
           ex => {
+            req.usageLog.error(`Error calling endpoint ${action}: ${ex.message}`);
             ex.stack = apiFixStack(ex.stack, debugFilePath);
             sendError(req, res, ex);
           }
@@ -247,9 +261,10 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
       }
 
       catch(ex) {
+        req.usageLog.error(`Error calling endpoint ${action}`);
         debug(`Error calling endpoint ${action}\n${ex.stack}`);
         sendError(req, res, ex);
-        return Promise.resolve(); // Must always return a Promise
+        return Promise.resolve(); // Must always return a Promise?? TODO: Make sure this is true or delete it.
       }
     }
   }

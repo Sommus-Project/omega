@@ -137,7 +137,8 @@ class SqlUser extends DSUser {
     await super.setGroups(groups);
   }
 
-  async setLastLogin(requestor, date) { // Only called by SSO?
+  async setLastLogin(requestor) {
+    const date = new Date();
     await setDateAttr(requestor, this, ATTR.LAST_LOGIN, date);
     await super.setLastLogin(date);
   }
@@ -182,15 +183,18 @@ class SqlUser extends DSUser {
   }
 
   async setName(requestor, {firstname, lastname} = {}) {
-    validateCanChange(this);
+    if (requestor !== this.id) {
+      validateCanChange(this);
+    }
+
     if (!isStr(firstname) || !isStr(lastname)) {
       throw new TypeError(VALUE_MUST_BE.STRING);
     }
 
     await this.service.setAttr(requestor, this.id, ATTR.FIRSTNAME, firstname);
-    await super.setFirstName(firstname)
+    await super.setFirstname(firstname)
     await this.service.setAttr(requestor, this.id, ATTR.LASTNAME, lastname);
-    await super.setFirstName(lastname)
+    await super.setLastname(lastname)
   }
 
   async setPassword(requestor, newPassword, existingPassword) {

@@ -1,3 +1,4 @@
+console.log(`actions.js is loaded.`);
 const actionFunctions = {};
 document.addEventListener('click', (evt) => {
   const action = evt.target.getAttribute('action');

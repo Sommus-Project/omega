@@ -77,7 +77,10 @@ doGet.auth = ['READ_USERS'];
 async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
   const { domain, id: requestor } = req.user;
   const ds = req.dirService(domain);
-  const { username = '', firstname = '', lastname = '', address1 = '', address2 = '', city = '', state = '', zip = '', country = '', email = '', password = '', groups = [] } = data;
+  const { username = '', firstname = '', lastname = '',
+    address1 = '', address2 = '', city = '', state = '',
+    zip = '', country = '', email = '', password = '',
+    groups = [], temporaryPw = true } = data;
 
   const errors = [];
   if (!username) {
@@ -137,7 +140,8 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
       password,
       groups
     };
-    await ds.createUser(requestor, newUserData, true);
+    
+    const id = await ds.createUser(requestor, newUserData, temporaryPw);
     const newUser = await ds.getUser(username);
     return new EntityCreated(`${req.path}/${username}`, newUser);
   }

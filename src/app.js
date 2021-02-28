@@ -29,7 +29,6 @@ async function initReqFn(req, res, options) { // eslint-disable-line no-unused-v
     })
 
     try {
-      debugger
       const decoded = await jwt.verify(sessionToken);
       await req.user.init(req, decoded); // Initialize the user based on who is logged in.
     }
@@ -39,7 +38,7 @@ async function initReqFn(req, res, options) { // eslint-disable-line no-unused-v
     }
   }
 
-  console.log(`User ${req.user.loggedIn ? 'is' : 'is not'} logged in.`);
+  console.info(`User ${req.user.loggedIn ? 'is' : 'is not'} logged in.`);
   // END TODO
 }
 

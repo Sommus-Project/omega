@@ -4,19 +4,19 @@ const CACHE_TIMEOUT = 120000; // 2 Minutes
 const ERRORS = {
   NOT_MODIFIABLE: 'NOT_MODIFIABLE',
   NOT_REMOVABLE: 'NOT_REMOVABLE',
-  PROTECTED_GROUP_NAME: 'PROTECTED_GROUP_NAME'
+  EXISTING_GROUP_NAME: 'EXISTING_GROUP_NAME'
 };
-const VALID_GROUP_NAME = /^[a-z][a-z0-9-_.]+$/i;
-const cache = {};
+const VALID_GROUP_NAME = /^[a-z](?:[a-z-](?!-{2,}))+$/;
+const userCache = {};
 
 // Cache clearing routine
 // istanbul ignore next
 let cacheInterval = setInterval(() => {
   const now = Date.now();
-  Object.entries(cache).forEach(
+  Object.entries(userCache).forEach(
     ([key, { expTime }]) => {
       if (expTime < now) {
-        delete cache[key];
+        delete userCache[key];
       }
     }
   );
@@ -54,52 +54,58 @@ function directoryService(config) {
       throw new ReferenceError(`Unknown domain [${domain}]`);
     }
 
+
     const { User, service } = dsList[domain];
 
     // Return the appropriate DS functions
     return {
       domain,
       // Check to see if the supplied username/password are valid.
-      // ✓ 2021-02-23
+      // ✓ 2021-02-23 - Finished
       async authenticate(username, password) {
         return await service.authenticate(username, password);
       },
 
+      // ✓ 2021-02-27
       async clearCache() {
-        Object.keys(cache).forEach(key => delete cache[key]);
+        Object.keys(userCache).forEach(key => delete userCache[key]);
       },
 
+      // ------------------------------- NEED TO FINISH -------------------------------
       async clearUserFromCache(username) {
         var key = `${username}@${domain}`;
-        if (cache[key]) {
-          delete cache[key];
+        if (userCache[key]) {
+          delete userCache[key];
         }
       },
 
       // Create a group and attach the users to the new group.
+      // ✓ 2021-02-27 - MOSTLY finished
+      // TODO: Check to see if any of the users are not modifiable and throw error
+      // ------------------------------- NEED TO FINISH -------------------------------
       async createGroup(requestor, groupName, description, users = []) {
         this.validateGroupName(groupName);
 
-        if (service.isProtectedGroup(groupName)) {
-          throw new InvalidActionError(ERRORS.PROTECTED_GROUP_NAME, `The group name "${groupName}" is invalid. Group names must not start with "searchappliance_"`);
+        if (await service.isExistingGroup(groupName)) {
+          throw new InvalidActionError(ERRORS.EXISTING_GROUP_NAME, `The group name "${groupName}" already exists.`);
         }
 
-        await service.createGroup(requestor, groupName, description);
-        if (Array.isArray(users) && users.length > 0) {
-          await this.setUsersForGroup(requestor, groupName, users, true)
-        }
+        // TODO: Check to see if any of the users are not modifiable and throw error
+        await service.createGroup(requestor, groupName, description, users);
       },
 
-      // ✓ 2021-02-23 - Seems to be finished
+      // ✓ 2021-02-23 - Finished
       async createUser(requestor, data, tempPassword = true) {
         return service.createUser(requestor, data, tempPassword);
       },
 
+      // ✓ 2021-02-23 - Finished
       async deleteGroup(requestor, groupName) {
         await service.delGroup(requestor, groupName);
         this.clearCache();
       },
 
+      // ✓ 2021-02-23 - Finished
       async deleteUser(requestor, username) {
         const user = await this.getUser(username)
         if (!user.removable) {
@@ -110,10 +116,12 @@ function directoryService(config) {
         return service.delUser(requestor, username);
       },
 
+      // ✓ 2021-02-23 - Finished
       async getGroup(groupName) {
         return await service.getGroupByName(groupName);
       },
 
+      // ✓ 2021-02-27 - Finished
       async getGroupUsers(groupName, params) {
         const group = await this.getGroup(groupName);
         if (group == null) {
@@ -123,41 +131,42 @@ function directoryService(config) {
         return await service.getGroupUsers(groupName, params);
       },
 
+      // ✓ 2021-02-23 - Finished
       async getGroups(params) {
         return await service.getGroups(params);
       },
 
+      // ✓ 2021-02-23 - Finished
       async getUser(username) {
         var key = `${username}@${domain}`;
-        //if (!cache[key]) {
-          // If this user is not already in cache then created a new User object
+        if (!userCache[key]) {
+          // If this user is not already in userCache then created a new User object
           const user = new User(service);
           // Fill it with data from the appropriate service (LDAP, etc.)
           await user.init(username, domain);
           // Save this user in the cacke
-          cache[key] = {
+          userCache[key] = {
             expTime: Date.now() + CACHE_TIMEOUT,
             user
           };
-        //}
+        }
 
-        // Return the user from cache
-        return cache[key].user;
+        // Return the user from userCache
+        return userCache[key].user;
       },
 
+      // ✓ 2021-02-23 - Finished
       async getUsers(params) {
         return await service.getUsers(params);
       },
 
+      // ✓ 2021-02-27 - Finished
       async setGroupDescription(requestor, groupName, description) {
-        if (service.isProtectedGroup(groupName)) {
-          throw new InvalidActionError(ERRORS.PROTECTED_GROUP_NAME, `The group "${groupName}" is protected. You can not change the description.`);
-        }
-
         return await service.setGroupDescription(requestor, groupName, description);
       },
 
       // TODO: Broken
+      // ------------------------------- NEED TO FINISH -------------------------------
       async setUsersForGroup(requestor, groupName, memberList, isNewGroup) {
         this.validateIsExistingGroup(groupName);
 
@@ -177,12 +186,14 @@ function directoryService(config) {
         [...membersToRemove, ...membersToAdd].forEach(username => this.clearUserFromCache(username));
       },
 
+      // ✓ 2021-02-27 - Finished
       validateGroupName(group) {
         if (!VALID_GROUP_NAME.test(group)) {
-          throw new InvalidGroupError(`The group name "${group}" is not properly formated. Group names must start with a letter and contain nothing but A-Z, 0-9, "-", "_" or "."`);
+          throw new InvalidGroupError(`The group name "${group}" is not properly formated. Group names must start with a lowercase letter and contain nothing but lowercase letter or "-"`);
         }
       },
 
+      // ------------------------------- NEED TO FINISH -------------------------------
       async validateIsExistingGroup(groups) {
         const allGroups = (await this.getGroups()).groups.map(group => group.name);
         if (!Array.isArray(groups)) {
