@@ -141,7 +141,7 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
       groups
     };
     
-    const id = await ds.createUser(requestor, newUserData, temporaryPw);
+    /*const id = */await ds.createUser(requestor, newUserData, temporaryPw);
     const newUser = await ds.getUser(username);
     return new EntityCreated(`${req.path}/${username}`, newUser);
   }

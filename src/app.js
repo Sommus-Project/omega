@@ -30,6 +30,7 @@ async function initReqFn(req, res, options) { // eslint-disable-line no-unused-v
 
     try {
       const decoded = await jwt.verify(sessionToken);
+      // TODO: Check for token expiration
       await req.user.init(req, decoded); // Initialize the user based on who is logged in.
     }
 
@@ -55,7 +56,7 @@ const config = {
   domains: {
     default: {
       User: SqlUser,
-      service: SqlService(({db:SQL_CONFIG}))
+      service: SqlService({db:SQL_CONFIG})
     }
   },
   staticFolder: 'dist/static',

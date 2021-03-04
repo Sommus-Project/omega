@@ -156,9 +156,13 @@ function initOmega(config = {}) { //eslint-disable-line complexity
   //********************************************************************************
   // Initialize variables for each request
   app.use((req, res, next) => {
-    req.dirService = dirService;
-    req.sessionManager = sessionManager;
+    // TODO: Get user here so it can be passed into the dirService
     req.requestId = nanoid(); // Generate a new Request ID for each request
+    req.sessionManager = sessionManager;
+    req.dirService = dirService; // TODO: If there is no user then set this to a failing dirService
+    req.res.on('finish', () => {
+      // TODO: Clean things up, like the dirService, DB, etc.
+    });
 
     if (options.serverName) {
       // Set the server name

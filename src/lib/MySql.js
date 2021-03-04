@@ -37,40 +37,36 @@ class Mysql {
   }
 
   insert(sql, params) {
-    return new Promise(
-      (resolve, reject) => {
-        connect(this);
-        this.connection.query(sql, params, (error, results) => {
-          if (error) {
-            reject(error);
-          }
-          else {
-            resolve(results.insertId);
-          }
-        });
-      }
-    );
+    return new Promise((resolve, reject) => {
+      connect(this);
+      this.connection.query(sql, params, (error, results) => {
+        if (error) {
+          reject(error);
+        }
+        else {
+          resolve(results.insertId);
+        }
+      });
+    });
   }
 
   query(sql, params) {
-    return new Promise(
-      (resolve, reject) => {
-        connect(this);
-        this.connection.query(sql, params, (error, results) => {
-          if (error) {
-            reject(error);
+    return new Promise((resolve, reject) => {
+      connect(this);
+      this.connection.query(sql, params, (error, results) => {
+        if (error) {
+          reject(error);
+        }
+        else {
+          if (Array.isArray(results)) {
+            resolve(results.map(result => ({...result})));
           }
           else {
-            if (Array.isArray(results)) {
-              resolve(results.map(result => ({...result})));
-            }
-            else {
-              resolve([{ ...results }]);
-            }
+            resolve([{ ...results }]);
           }
-        });
-      }
-    );
+        }
+      });
+    });
   }
 
   async queryOne(sql, params) {

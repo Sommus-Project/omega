@@ -20,16 +20,16 @@ const path = require('path').posix;
 async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
   const { domain } = req.user;
   const ds = req.dirService(domain);
-  let user;
+
   try {
-    user = await ds.getUser(username);
+    const user = await ds.getUser(username);
+    console.log(user);
+    return { locked: user.locked };
   }
 
   catch (ex) {
     throw404(path.dirname(req.path), ex.message);
   }
-
-  return { locked: user.locked };
 }
 doGet.auth = ['READ_USERS'];
 
@@ -44,7 +44,7 @@ doGet.auth = ['READ_USERS'];
  * @apiResponseExample <204> State of locked set
  */
 async function doPut({ username, data, req }) { // eslint-disable-line no-unused-vars
-  const { domain } = req.user;
+  const { domain, id: requestor } = req.user;
   const ds = req.dirService(domain);
   let user;
   try {
@@ -56,7 +56,7 @@ async function doPut({ username, data, req }) { // eslint-disable-line no-unused
   }
 
   try {
-    await user.setLocked(data.locked || false);
+    await user.setLocked(requestor, data.locked);
   }
 
   catch (ex) {

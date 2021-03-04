@@ -20,16 +20,15 @@ const path = require('path').posix;
 async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
   const { domain } = req.user;
   const ds = req.dirService(domain);
-  let user;
   try {
-    user = await ds.getUser(username);
+    const { groups } = await ds.getUser(username);
+    return { groups };
   }
 
   catch (ex) {
     throw404(path.dirname(req.path), ex.message);
   }
 
-  return user.groups;
 }
 doGet.auth = ['READ_USERS'];
 
@@ -45,11 +44,11 @@ doGet.auth = ['READ_USERS'];
  * @apiResponseExample <201> FIXME Success Reponse Title
  */
 async function doPut({ username, data, req }) { // eslint-disable-line no-unused-vars
-  if (!data || !Array.isArray(data.groups) || data.groups.some(g => typeof g != 'string')) {
-    throw new HttpError(400, { title: 'Groups must be an array of strings.' });
+  if (!data || !Array.isArray(data.groups) || data.groups.some(g => typeof g != 'number')) {
+    throw new HttpError(400, { title: 'Groups must be an array of integers.' });
   }
 
-  const { domain } = req.user;
+  const { domain, id: requestor } = req.user;
   const ds = req.dirService(domain);
   let user;
   try {
@@ -61,7 +60,7 @@ async function doPut({ username, data, req }) { // eslint-disable-line no-unused
   }
 
   try {
-    await user.setGroups(data.groups);
+    await user.setGroups(requestor, data.groups);
   }
 
   catch (ex) {

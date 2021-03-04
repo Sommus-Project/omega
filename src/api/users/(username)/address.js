@@ -1,30 +1,35 @@
 /* eslint-env omega/api */
-// API file: name
-// Source File: src/api/users/(username)/name.js
+// API file: address
+// Source File: src/api/users/(username)/address.js
 // Generated on: 7/19/2019, 10:34:33 AM
 const path = require('path').posix;
 
 /**
- * @api {get} /api/users/:username/name Get user.name
+ * @api {get} /api/users/:username/address Get user.address
  * @apiGroup Users
- * @apiDescription Get the 'name' for the specified user
+ * @apiDescription Get the 'address' for the specified user
  * @apiPermissions (role) 'READ_USERS'
  * @apiParam (path) username username of the user to read.
  * @apiRequestValue <200> (path) username johnsloan.
- * @apiRequestExample <200> Get name
- * @apiResponseExample <200> Value of the name
+ * @apiRequestExample <200> Get address
+ * @apiResponseExample <200> Value of the address
  * {
- *   firstname: "John",
- *   lastname: "Smith"
+ *   "address1": "5 Avenue Anatole France",
+ *   "address2": "",
+ *   "city": "Paris",
+ *   "state": "",
+ *   "zip": "75005",
+ *   "country": "France",
+ *   "lat": "48.85817191352806",
+ *   "lng": "2.2945088277244645",
  * }
  */
-async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
+async function doGet({ username, req }) {
   const { domain } = req.user;
   const ds = req.dirService(domain);
 
   try {
-    const { firstname, lastname } = await ds.getUser(username);
-    return { firstname, lastname };
+    return (await ds.getUser(username)).address;
   }
 
   catch (ex) {
@@ -34,14 +39,14 @@ async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
 doGet.auth = ['READ_USERS'];
 
 /**
- * @api {put} /api/users/:username/name Set user.name
+ * @api {put} /api/users/:username/address Set user.address
  * @apiGroup Users
- * @apiDescription Set the state of 'name' for the specified user
+ * @apiDescription Set the state of 'address' for the specified user
  * @apiPermissions (role) 'WRITE_USERS'
  * @apiParam (path) username username of the user to affect.
  * @apiRequestValue <204> (path) username jillsmith.
- * @apiRequestExample <204> Set state of name
- * @apiResponseExample <204> State of name set
+ * @apiRequestExample <204> Set state of address
+ * @apiResponseExample <204>
  */
 async function doPut({ username, data, req }) { // eslint-disable-line no-unused-vars
   const { domain, id: requestor } = req.user;
@@ -51,16 +56,16 @@ async function doPut({ username, data, req }) { // eslint-disable-line no-unused
     user = await ds.getUser(username);
   }
 
-  catch(ex) {
+  catch (ex) {
     throw404(path.dirname(req.path), ex.message);
   }
 
   try {
-    await user.setName(requestor, data);
+    await user.setAddress(requestor, data);
   }
 
   catch (ex) {
-    throw new HttpError(400, { title: ex.message, data: `Unable to set 'name' for the user ${username}` });
+    throw new HttpError(400, { title: ex.message, data: `Unable to set 'address' for the user ${username}` });
   }
 }
 doPut.auth = ['WRITE_USERS'];

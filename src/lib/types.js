@@ -8,7 +8,7 @@ const VALUE_MUST_BE = {
   STRING: 'The incoming value must be a string.'
 };
 
-const getType = val => (val == null ? 'Null' : val.constructor.toString().substr(9, 3))
+const getType = val => (val == null ? 'Null' : val.constructor.toString().substr(9, 3));
 const isBool = val => getType(val) == 'Boo'; // eslint-disable-line eqeqeq
 const isDate = val => getType(val) == 'Dat'; // eslint-disable-line eqeqeq
 const isNum = val => getType(val) == 'Num'; // eslint-disable-line eqeqeq

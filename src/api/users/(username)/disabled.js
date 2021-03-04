@@ -20,16 +20,16 @@ const path = require('path').posix;
 async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
   const { domain } = req.user;
   const ds = req.dirService(domain);
-  let user;
+
   try {
-    user = await ds.getUser(username);
+    const { disabled } = await ds.getUser(username);
+    return { disabled };
   }
 
   catch (ex) {
     throw404(path.dirname(req.path), ex.message);
   }
 
-  return { disabled: user.disabled };
 }
 doGet.auth = ['WRITE_USERS'];
 
@@ -44,7 +44,7 @@ doGet.auth = ['WRITE_USERS'];
  * @apiResponseExample <204> State of disabled set
  */
 async function doPut({ username, data, req }) { // eslint-disable-line no-unused-vars
-  const { domain } = req.user;
+  const { domain, id: requestor } = req.user;
   const ds = req.dirService(domain);
   let user;
   try {
@@ -56,11 +56,11 @@ async function doPut({ username, data, req }) { // eslint-disable-line no-unused
   }
 
   try {
-    await user.setDisabled(data.disabled || false);
+    await user.setDisabled(requestor, data.disabled);
   }
 
   catch (ex) {
-    throw new HttpError(400, { title: ex.message, data: `Unable to set 'disabled' for the user ${username}` });
+    throw new HttpError(400, { title: ex.message, data: `Unable to set 'disabled' for the user '${username}'` });
   }
 }
 doPut.auth = ['WRITE_USERS'];

@@ -16,9 +16,11 @@ const path = require('path').posix;
  */
 async function doPut({ username, data, req }) { // eslint-disable-line no-unused-vars
   const { domain, id: requestor } = req.user;
+  const { password } = data;
   const ds = req.dirService(domain);
   let user;
   try {
+    console.log({username, password});
     user = await ds.getUser(username);
   }
 
@@ -27,7 +29,7 @@ async function doPut({ username, data, req }) { // eslint-disable-line no-unused
   }
 
   try {
-    await user.setPassword(requestor, data.password);
+    await user.setPassword(requestor, password);
   }
 
   catch (ex) {

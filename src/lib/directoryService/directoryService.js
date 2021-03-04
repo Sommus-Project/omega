@@ -6,7 +6,7 @@ const ERRORS = {
   NOT_REMOVABLE: 'NOT_REMOVABLE',
   EXISTING_GROUP_NAME: 'EXISTING_GROUP_NAME'
 };
-const VALID_GROUP_NAME = /^[a-z](?:[a-z-](?!-{2,}))+$/;
+const VALID_GROUP_NAME = /^[a-z](?:[a-z0-9-](?!-{2,}))+$/;
 const userCache = {};
 
 // Cache clearing routine
@@ -142,7 +142,7 @@ function directoryService(config) {
         if (!userCache[key]) {
           // If this user is not already in userCache then created a new User object
           const user = new User(service);
-          // Fill it with data from the appropriate service (LDAP, etc.)
+          // Fill it with data from the appropriate service (MySql, LDAP, etc.)
           await user.init(username, domain);
           // Save this user in the cacke
           userCache[key] = {
@@ -189,7 +189,7 @@ function directoryService(config) {
       // ✓ 2021-02-27 - Finished
       validateGroupName(group) {
         if (!VALID_GROUP_NAME.test(group)) {
-          throw new InvalidGroupError(`The group name "${group}" is not properly formated. Group names must start with a lowercase letter and contain nothing but lowercase letter or "-"`);
+          throw new InvalidGroupError(`The group name "${group}" is not properly formated. Group names must start with a lowercase letter and contain nothing but lowercase letters, numbers or "-"`);
         }
       },
 
