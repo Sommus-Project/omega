@@ -15,9 +15,9 @@ const path = require('path').posix;
  * @apiResponseExample <204> State of password set
  */
 async function doPut({ username, data, req }) { // eslint-disable-line no-unused-vars
-  const { domain, id: requestor } = req.user;
+  const { id: requestor } = req.user;
   const { password } = data;
-  const ds = req.dirService(domain);
+  const ds = req.dirService;
   let user;
   try {
     console.log({username, password});

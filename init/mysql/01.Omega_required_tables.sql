@@ -40,7 +40,7 @@ CREATE TABLE omega_users (
   disabled TINYINT NOT NULL DEFAULT 0,
   deleted TINYINT NOT NULL DEFAULT 0,
   pwd_exp_warned TINYINT NOT NULL DEFAULT 0,
-  pwd_retry_count INT UNSIGNED NULL,
+  pwd_retry_count INT UNSIGNED NOT NULL DEFAULT 0,
   last_login DATETIME NULL,
   created_by BIGINT UNSIGNED NOT NULL,
   created_at DATETIME NOT NULL DEFAULT NOW(),
@@ -152,6 +152,20 @@ CREATE TABLE omega_group_permissions (
   CONSTRAINT omega_group_permissions_ibfk_2 FOREIGN KEY (permission_id) REFERENCES omega_permissions (id) ON UPDATE CASCADE,
   CONSTRAINT omega_group_permissions_ibfk_3 FOREIGN KEY (created_by) REFERENCES omega_users (id) ON UPDATE CASCADE,
   CONSTRAINT omega_group_permissions_ibfk_4 FOREIGN KEY (updated_by) REFERENCES omega_users (id) ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+#-------------------------------------------------------------------------------
+# omega_sessions table
+#-------------------------------------------------------------------------------
+DROP TABLE IF EXISTS omega_sessions;
+CREATE TABLE omega_sessions (
+  user_id BIGINT UNSIGNED NOT NULL,
+  username VARCHAR(255) NOT NULL,
+  sessionId VARCHAR(255) NOT NULL,
+  expires_on DATETIME NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT NOW(),
+  KEY omega_sessions_user_id_i (user_id),
+  CONSTRAINT omega_sessions_ibfk_1 FOREIGN KEY (user_id) REFERENCES omega_users (id) ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 SET foreign_key_checks = 1;

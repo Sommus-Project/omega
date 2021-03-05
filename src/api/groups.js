@@ -38,8 +38,7 @@ const EntityCreated = require('./EntityCreated');
  * }
  */
 async function doGet({ req }) { // eslint-disable-line no-unused-vars
-  const { domain } = req.user;
-  const ds = req.dirService(domain);
+  const ds = req.dirService;
   const groups = await ds.getGroups(getRanges(req.query));
   return groups;
 }
@@ -80,8 +79,7 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
     throw new HttpError(400, '"users" must be null or an array of usernames.');
   }
 
-  const { domain } = req.user;
-  const ds = req.dirService(domain);
+  const ds = req.dirService;
 
   try {
     const newGroup = await ds.createGroup(requestor, name, description, users);

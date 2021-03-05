@@ -2,8 +2,6 @@ const omega = require('..');
 const SqlUser = require('./lib/directoryService/SqlUser');
 const SqlService = require('./lib/directoryService/SqlService');
 const SQL_CONFIG = require('./lib/SQL_CONFIG');
-const User = require('./lib/User');
-const jwt = require('./lib/jwt');
 const APP_TITLE = 'Sample Omega App';
 console.info(`\x1B]0;${APP_TITLE}\x07\x1B[95m${APP_TITLE}\x1B[0m`);
 
@@ -18,29 +16,17 @@ async function initAppFn(app, options) { // eslint-disable-line no-unused-vars
 }
 
 async function initReqFn(req, res, options) { // eslint-disable-line no-unused-vars
-  // BEGIN TODO: Move this block into regular Omega
-  const { SESSION_COOKIE = 'session' } = req;
-  res.locals.user = req.user = new User();
-  const sessionToken = req.cookies[SESSION_COOKIE];
-  if (sessionToken) {
+  // BEGIN OPTIONAL CODE
+  // If we need to transfer the session cookie into ALL rest calls
+  // The we need this code.
+  const sessionId = req.cookies[req.SESSION_COOKIE];
+  if (sessionId) {
     req.rest.onSend(sender => {
       // Set session id for all calls to `req.rest`
-      sender.setCookie(SESSION_COOKIE, sessionToken, false);
-    })
-
-    try {
-      const decoded = await jwt.verify(sessionToken);
-      // TODO: Check for token expiration
-      await req.user.init(req, decoded); // Initialize the user based on who is logged in.
-    }
-
-    catch (ex) {
-      console.error(ex.stack);
-    }
+      sender.setCookie(SESSION_COOKIE, sessionId, false);
+    });
   }
-
-  console.info(`User ${req.user.loggedIn ? 'is' : 'is not'} logged in.`);
-  // END TODO
+  // END OPTIONAL CODE
 }
 
 const config = {
@@ -53,11 +39,9 @@ const config = {
   httpsPort: process.env.PORTS || 5001,
   initAppFn,
   initReqFn,
-  domains: {
-    default: {
-      User: SqlUser,
-      service: SqlService({db:SQL_CONFIG})
-    }
+  directoryService: {
+    User: SqlUser,
+    service: SqlService({db:SQL_CONFIG})
   },
   staticFolder: 'dist/static',
   viewFolder: 'dist/views'

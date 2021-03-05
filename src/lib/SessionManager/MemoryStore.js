@@ -18,16 +18,14 @@ class MemoryStore {
     }, testing ? 25 : 500);
   }
 
-  async addSession(sessionId, username, domain) {
-    if (this._sessions[sessionId] &&
-      (this._sessions[sessionId].username !== username || this._sessions[sessionId].domain !== domain)) {
+  async addSession(sessionId, username) {
+    if (this._sessions[sessionId] && this._sessions[sessionId].username !== username) {
       throw new Error('Invalid SessionId');
     }
 
     this._sessions[sessionId] = {
       expires: getExpTime(this._timeout),
-      username,
-      domain
+      username
     };
   }
 
@@ -56,18 +54,16 @@ class MemoryStore {
 
   async getUserFromSession(sessionId, touch = false) {
     let expires;
-    let domain;
     let username;
     const foundSession = this._sessions[sessionId];
 
     if (foundSession) {
       expires = foundSession.expires
-      domain = foundSession.domain;
       username = foundSession.username;
       if (touch) {
         this.touchSession(sessionId);
       }
-      return { expires, domain, username };
+      return { expires, username };
     }
   }
 
@@ -75,9 +71,9 @@ class MemoryStore {
     delete this._sessions[sessionId];
   }
 
-  async invalidateUser(username, domain) {
+  async invalidateUser(username) {
     Object.entries(this._sessions).forEach(([sessionId, data]) => {
-      if (username === data.username && domain === data.domain) {
+      if (username === data.username) {
         delete this._sessions[sessionId];
       }
     });

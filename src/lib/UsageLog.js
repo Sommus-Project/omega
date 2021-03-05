@@ -27,7 +27,7 @@ class UsageLog {
     }
 
     const [urlPath, parameters = ''] = req.originalUrl.split('?');
-    const user = (req.user && req.user.username) ? `${req.user.username}@${req.user.domain}` : ANONYMOUS_USER;
+    const user = (req.user && req.user.username) ? `${req.user.username}[${req.user.id}]` : ANONYMOUS_USER;
     this.timestamp = Date.now();
 
     this.data = {

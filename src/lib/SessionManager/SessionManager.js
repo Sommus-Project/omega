@@ -1,6 +1,7 @@
 //const crypto = require('crypto');
 const MemoryStore = require('./MemoryStore');
 //const RedisStore = require('./RedisStore');
+//const MySqlStore = require('./MySqlStore');
 const asyncForEach = require('../asyncForEach');
 const asyncSome = require('../asyncSome');
 const jwt = require('../jwt');
@@ -25,15 +26,20 @@ class SessionManager {
     // if(options.redis) {
     //   this._store.push(new RedisStore(options.redis));
     // }
+
+    // if(options.sql) {
+    //   this._store.push(new MySqlStore(options.sel));
+    // }
   }
 
   async destroy() {
     await asyncForEach(this._stores, async store => await store.destroy());
   }
 
-  async createSession(username, domain) {
-    const sessionId = jwt.sign({ username, domain });
-    await this.addSession(sessionId, username, domain);
+  async createSession(username) {
+    const ts = Date.now()/1000;
+    const sessionId = jwt.sign({ username, ts });
+    await this.addSession(sessionId, username, ts);
     return sessionId;
   }
 
@@ -69,16 +75,16 @@ class SessionManager {
     await asyncForEach(this._stores, async store => await store.touchSession(sessionId));
   }
 
-  async addSession(sessionId, username, domain) {
-    await asyncForEach(this._stores, async store => await store.addSession(sessionId, username, domain));
+  async addSession(sessionId, username) {
+    await asyncForEach(this._stores, async store => await store.addSession(sessionId, username));
   }
 
   async invalidateSession(sessionId) {
     await asyncForEach(this._stores, async store => await store.invalidateSession(sessionId));
   }
 
-  async invalidateUser(username, domain) {
-    await asyncForEach(this._stores, async store => await store.invalidateUser(username, domain));
+  async invalidateUser(username) {
+    await asyncForEach(this._stores, async store => await store.invalidateUser(username));
   }
 }
 

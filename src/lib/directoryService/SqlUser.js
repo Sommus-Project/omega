@@ -60,22 +60,15 @@ class SqlUser extends DSUser {
         throw new TypeError(`The argument 'data.username' must be a valid string`);
       }
 
-      if (!data.domain) {
-        throw new TypeError(`The argument 'data.domain' must be a valid string`);
-      }
       DSUser.initFromObj(this, data);
-      super.init(data.username, data.domain);
+      super.init(data.username);
     }
   }
 
   // ✓ 2021-03-02 - Finished
-  async init(username, domain = 'default') {
+  async init(username) {
     if (!username) {
       throw new TypeError(`The argument 'username' must be a valid string`);
-    }
-
-    if (!domain) {
-      throw new TypeError(`The argument 'domain' must be a valid string`);
     }
 
     const obj = await this.service.getUserById(username);
@@ -83,7 +76,7 @@ class SqlUser extends DSUser {
       throw new HttpError(404, "User not found");
     }
     DSUser.initFromObj(this, obj);
-    super.init(username, domain);
+    super.init(username);
   }
 
   // ✓ 2021-03-02 - 

@@ -204,7 +204,7 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
       }
 
       try {
-        const { deleted, locked, disabled } = req.user;
+        const { deleted, locked, disabled, loggedIn } = req.user;
         let isAllowed = !(deleted || disabled);
         
         if (isAllowed) {
@@ -213,7 +213,7 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
           }
 
           if (handler.loggedIn === true) {
-            if (!req.user.loggedIn) {
+            if (!loggedIn) {
               req.usageLog.warn('Attempted to access enpoint that requires logged in user');
               throw new HttpError(HTTP_STATUS_UNAUTHORIZED, { title: `Must be logged in to access endpoint [${action}].`, headers: { 'WWW-Authenticate': 'Bearer' } });
             }
@@ -224,6 +224,10 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
               throw new HttpError(HTTP_STATUS_SERVER_ERROR, 'Omega does not support API auth functions yet.');
             }
             else {
+              if (!loggedIn) {
+                req.usageLog.warn('Attempted to access enpoint that requires logged in user');
+                throw new HttpError(HTTP_STATUS_UNAUTHORIZED, { title: `Must be logged in to access endpoint [${action}].`, headers: { 'WWW-Authenticate': 'Bearer' } });
+              }
               if (locked) {
                 isAllowed = false;
               }

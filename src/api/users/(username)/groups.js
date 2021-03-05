@@ -18,8 +18,7 @@ const path = require('path').posix;
  * }
  */
 async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
-  const { domain } = req.user;
-  const ds = req.dirService(domain);
+  const ds = req.dirService;
   try {
     const { groups } = await ds.getUser(username);
     return { groups };
@@ -48,8 +47,8 @@ async function doPut({ username, data, req }) { // eslint-disable-line no-unused
     throw new HttpError(400, { title: 'Groups must be an array of integers.' });
   }
 
-  const { domain, id: requestor } = req.user;
-  const ds = req.dirService(domain);
+  const { id: requestor } = req.user;
+  const ds = req.dirService;
   let user;
   try {
     user = await ds.getUser(username);

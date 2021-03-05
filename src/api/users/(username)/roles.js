@@ -18,8 +18,7 @@ const path = require('path').posix;
  * }
  */
 async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
-  const { domain } = req.user;
-  const ds = req.dirService(domain);
+  const ds = req.dirService;
 
   try {
     const user = await ds.getUser(username);

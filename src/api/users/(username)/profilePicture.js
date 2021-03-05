@@ -18,8 +18,7 @@ const path = require('path').posix;
  * }
  */
 async function doGet({ username, req }) {
-  const { domain } = req.user;
-  const ds = req.dirService(domain);
+  const ds = req.dirService;
 
   try {
     const { profilePicture } = await ds.getUser(username);
@@ -43,8 +42,8 @@ doGet.auth = ['READ_USERS'];
  * @apiResponseExample <204>
  */
 async function doPut({ username, data, req }) {
-  const { domain, id: requestor } = req.user;
-  const ds = req.dirService(domain);
+  const { id: requestor } = req.user;
+  const ds = req.dirService;
   let user;
   try {
     user = await ds.getUser(username);

@@ -54,7 +54,7 @@ doPut.loggedIn = true;
  * @apiResponseExample <204> Session was deleted
  */
 async function doDelete({ req }) { // eslint-disable-line no-unused-vars
-  const SESSION_COOKIE = req.SESSION_COOKIE || 'session';
+  const { SESSION_COOKIE } = req;
   req.usageLog.info(`User ${req.user.username} logged out of session ${req.sessionId}`);
   await req.sessionManager.invalidateSession(req.sessionId);
   return new HttpResponse({

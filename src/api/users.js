@@ -16,7 +16,7 @@ const getRanges = require('./getRanges');
 /**
  * @api {get} /api/users Get the list of users
  * @apiGroup Users
- * @apiDescription Get a list of users on this system based on the users domain
+ * @apiDescription Get a list of users on this system
  * @apiPermissions (role) 'READ_USERS'
  *
  * @apiRequestExample <200> Get list of users
@@ -41,8 +41,7 @@ const getRanges = require('./getRanges');
  */
 async function doGet({ req }) { // eslint-disable-line no-unused-vars
   const ranges = getRanges(req.query);
-  const { domain } = req.user;
-  const ds = req.dirService(domain);
+  const ds = req.dirService;
   const resp = await ds.getUsers(ranges);
   return resp;
 }
@@ -51,7 +50,7 @@ doGet.auth = ['READ_USERS'];
 /**
  * @api {post} /api/users Create a new user
  * @apiGroup Users
- * @apiDescription Create a new user within the same domain as the current user
+ * @apiDescription Create a new user
  * @apiPermissions (role) 'WRITE_USERS'
  *
  * @apiRequestExample <201> Create a new user
@@ -75,8 +74,8 @@ doGet.auth = ['READ_USERS'];
  * }
  */
 async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
-  const { domain, id: requestor } = req.user;
-  const ds = req.dirService(domain);
+  const { id: requestor } = req.user;
+  const ds = req.dirService;
   const { username = '', firstname = '', lastname = '',
     address1 = '', address2 = '', city = '', state = '',
     zip = '', country = '', email = '', password = '',
@@ -141,7 +140,7 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
       groups
     };
     
-    /*const id = */await ds.createUser(requestor, newUserData, temporaryPw);
+    await ds.createUser(requestor, newUserData, temporaryPw);
     const newUser = await ds.getUser(username);
     return new EntityCreated(`${req.path}/${username}`, newUser);
   }

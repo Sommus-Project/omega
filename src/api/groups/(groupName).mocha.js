@@ -11,7 +11,6 @@ describe('Tests for API: src/api/groups/(groupName).js', () => {
   const req = {
     user: {
       username: 'tomthumb',
-      domain: 'default'
     },
     query: {
       /*
@@ -20,27 +19,25 @@ describe('Tests for API: src/api/groups/(groupName).js', () => {
       order
       */
     },
-    dirService(domain) { // eslint-disable-line no-unused-vars
-      return {
-        deleteGroup(groupName) {
-          if (groupName === 'error') {
-            throw new Error("Oops!");
-          }
-
-          const group = groups[groupName];
-          if (!group) {
-            throw new InvalidActionError('NOT_FOUND', `Group ${groupName} was not found.`);
-          }
-
-          if (!group.removable) {
-            throw new InvalidActionError('UNABLE_TO_DELETE', `Group ${groupName} is non-removable`);
-          }
-
-          delete groups[groupName];
-        },
-        getGroup(groupName) {
-          return groups[groupName];
+    dirService: { // eslint-disable-line no-unused-vars
+      deleteGroup(groupName) {
+        if (groupName === 'error') {
+          throw new Error("Oops!");
         }
+
+        const group = groups[groupName];
+        if (!group) {
+          throw new InvalidActionError('NOT_FOUND', `Group ${groupName} was not found.`);
+        }
+
+        if (!group.removable) {
+          throw new InvalidActionError('UNABLE_TO_DELETE', `Group ${groupName} is non-removable`);
+        }
+
+        delete groups[groupName];
+      },
+      getGroup(groupName) {
+        return groups[groupName];
       }
     }
   };

@@ -8,7 +8,7 @@ module.exports = {
 
   async sign(data) {
     const signWithPromise = createSigner({ key: async () => JWT_SECRET });
-    return await signWithPromise(data);
+    return signWithPromise(data);
   },
 
   async verify(token) {

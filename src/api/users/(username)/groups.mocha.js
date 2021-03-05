@@ -51,8 +51,7 @@ describe('Tests for API: src/api/users/(username)/groups.js', () => {
   let putData;
   const req = {
     user: {
-      username: 'ppotts',
-      domain: 'default'
+      username: 'ppotts'
     },
     query: {
       /*
@@ -61,29 +60,27 @@ describe('Tests for API: src/api/users/(username)/groups.js', () => {
       order
       */
     },
-    dirService(domain) { // eslint-disable-line no-unused-vars
-      return {
-        getUser(username) {
-          if (username === 'missing') {
-            throw new Error('no user found');
-          }
-
-          const user = { ...(users.filter((item) => item.username === username)[0]) };
-          if (user) {
-            user.setGroups = function (data) {
-              const hasBad = data.some(group => group === 'bad');
-              if (hasBad) {
-                const err = new Error('bad group');
-                err.additional = 'stuff';
-                throw err;
-              }
-
-              putData = data;
-            }
-          }
-
-          return user;
+    dirService: { // eslint-disable-line no-unused-vars
+      getUser(username) {
+        if (username === 'missing') {
+          throw new Error('no user found');
         }
+
+        const user = { ...(users.filter((item) => item.username === username)[0]) };
+        if (user) {
+          user.setGroups = function (data) {
+            const hasBad = data.some(group => group === 'bad');
+            if (hasBad) {
+              const err = new Error('bad group');
+              err.additional = 'stuff';
+              throw err;
+            }
+
+            putData = data;
+          }
+        }
+
+        return user;
       }
     }
   };

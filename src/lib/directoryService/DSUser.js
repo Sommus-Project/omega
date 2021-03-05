@@ -25,7 +25,6 @@ class DSUser {
       passwordExpirationTime: initialDate,
       passwordRetryCount: 0,
       profilePicture: '',
-      domain: '',
       removable: false,
       state: '',
       username: '',
@@ -40,13 +39,11 @@ class DSUser {
   }
 
   // ✓ 2021-03-02 - Finished
-  init(uid, domain = 'default') {
+  init(uid) {
     const p = _private.get(this);
     if (p.username !== uid) {
       throw new Error(`User object incorrectly instantiated. '${p.username}' should have been '${uid}'`);
     }
-
-    p.domain = domain;
   }
 
   static initFromObj(dsUser, userInfo) {
@@ -89,11 +86,6 @@ class DSUser {
   // ✓ 2021-03-02 - Finished
   get disabled() { // Readonly
     return _private.get(this).disabled;
-  }
-
-  // ✓ 2021-03-02 - Finished
-  get domain() { // Readonly
-    return _private.get(this).domain;
   }
 
   // ✓ 2021-03-02 - Finished
@@ -207,7 +199,7 @@ class DSUser {
   async setDisabled(disabled) {
     _private.get(this).disabled = disabled;
     if (disabled) {
-      await clearSession(this.username, this.domain);
+      await clearSession(this.username);
     }
   }
 
@@ -226,6 +218,7 @@ class DSUser {
       throw new TypeError('The incoming value must be an array of strings.');
     }
     _private.get(this).groups = [...groups];
+    // TODO: Clear all users that have this group.
   }
 
   // ✓ 2021-03-02 - Finished
@@ -247,7 +240,7 @@ class DSUser {
   async setLocked(locked) {
     _private.get(this).locked = locked;
     if (locked) {
-      await clearSession(this.username, this.domain);
+      await clearSession(this.username);
     }
   }
 
@@ -265,7 +258,7 @@ class DSUser {
   async setPasswordExpirationTime(date) {
     _private.get(this).passwordExpirationTime = date;
     if (date.valueOf() < Date.now()) {
-      await clearSession(this.username, this.domain);
+      await clearSession(this.username);
     }
   }
 
@@ -282,20 +275,20 @@ class DSUser {
   // ✓ 2021-03-02 - Finished
   toJSON() {
     const p = _private.get(this);
-    const { address1, address2, city, country, disabled, email, firstname, id, lastLogin, lastname, locked, modifiable, passwordExpirationTime, passwordRetryCount, profilePicture, domain, removable, state, username, zip, canChangePassword, deleted, passwordExpirationWarned, roles } = p;
+    const { address1, address2, city, country, disabled, email, firstname, id, lastLogin, lastname, locked, modifiable, passwordExpirationTime, passwordRetryCount, profilePicture, removable, state, username, zip, canChangePassword, deleted, passwordExpirationWarned, roles } = p;
     const groups = p.groups ? [...p.groups] : [];
 
     return {
-      id, username, domain, firstname, lastname, email, disabled, lastLogin, locked, modifiable, removable, deleted,
+      id, username, firstname, lastname, email, disabled, lastLogin, locked, modifiable, removable, deleted,
       passwordExpirationTime, passwordRetryCount, canChangePassword, passwordExpirationWarned, passwordExpired: this.passwordExpired, 
       address1, address2, city, state, zip, country, profilePicture, groups, roles
     };
   }
 }
 
-async function clearSession(username, domain) {
+async function clearSession(username) {
   if (typeof DSUser.purgeSession === 'function') {
-    await DSUser.purgeSession(username, domain);
+    await DSUser.purgeSession(username);
   }
 }
 

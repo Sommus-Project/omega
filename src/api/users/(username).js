@@ -30,8 +30,7 @@ const NoEntityError = require('./directoryService/errors/NoEntityError');
  * }
  */
 async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
-  const { domain } = req.user;
-  const ds = req.dirService(domain);
+  const ds = req.dirService;
 
   try {
     return await ds.getUser(username);
@@ -70,8 +69,8 @@ doGet.auth = ['READ_USERS'];
  * }
  */
 async function doDelete({ username, req }) { // eslint-disable-line no-unused-vars
-  const { domain, id: requestor } = req.user;
-  const ds = req.dirService(domain);
+  const { id: requestor } = req.user;
+  const ds = req.dirService;
   if (username === req.user.username) {
     throw new HttpError(400, 'You can not delete yourself.');
   }

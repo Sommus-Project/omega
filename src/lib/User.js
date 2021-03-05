@@ -14,11 +14,10 @@ class User {
     this.roles = [];
   }
 
-  async init(req, { username, domain = 'default' } = {}) {
+  async init(req, username) {
     const newUserData = {
       id: null,
       username: null,
-      domain: null,
       email: null,
       firstname: null,
       lastname: null,
@@ -44,7 +43,7 @@ class User {
       return false;
     }
 
-    const ds = req.dirService(domain);
+    const ds = req.dirService;
     const resp = await ds.getUser(username);
     setReadOnlyData(this, resp.toJSON());
     return true;
@@ -64,10 +63,6 @@ class User {
     }
 
     return chkRoles.some(role => this.roles.includes(role));
-  }
-
-  isUser (username, domain = 'default') {
-    return (this.username === username && this.domain === domain);
   }
 }
 

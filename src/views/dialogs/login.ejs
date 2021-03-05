@@ -32,8 +32,16 @@
       json = await resp.json();
       console.info(JSON.stringify(json, 0, 2));
       if (resp.status < 300) {
-        // TODO: Redirect to page defined in QS
-        window.location.reload();
+        if (json.locked) {
+          alert('User is locked. Need admin to unlock account.')
+        }
+        else if (json.passwordExpired) {
+          alert('User passwword has expired. Need to change your password.')
+        }
+        else {
+          // TODO: Redirect to page defined in QS
+          window.location.reload();
+        }
       }
     }
     catch(ex) {

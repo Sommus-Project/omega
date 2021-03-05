@@ -17,13 +17,13 @@ const VALID_NAME = /^.+$/i;
  */
 async function doPut({ data, req }) {
   const { firstname, lastname } = data;
-  const { username, domain, id: requestor } = req.user;
+  const { username, id: requestor } = req.user;
   if (Object.keys(data).length !== 2 || !VALID_NAME.test(firstname) || !VALID_NAME.test(lastname)) {
     req.usageLog.info(`User ${username} send invalid parameters`);
     return new HttpError(400, 'Invalid parameters sent.');
   }
 
-  const ds = req.dirService(domain);
+  const ds = req.dirService;
   const user = await ds.getUser(username);
   req.usageLog.info(`User ${username} changing their name to ${firstname} ${lastname}`);
   await user.setName(requestor, data);

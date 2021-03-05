@@ -12,8 +12,7 @@ describe('Tests for API: src/api/groups/(groupName)/users.js', () => {
   let groups = {};
   const req = {
     user: {
-      username: 'tomthumb',
-      domain: 'default'
+      username: 'tomthumb'
     },
     query: {
       /*
@@ -22,33 +21,31 @@ describe('Tests for API: src/api/groups/(groupName)/users.js', () => {
       order
       */
     },
-    dirService(domain) { // eslint-disable-line no-unused-vars
-      return {
-        setUsersForGroup(groupName, memberList, isNewGroup) { // eslint-disable-line no-unused-vars
-          if (groupName === 'error') {
-            throw new Error("Oops!");
-          }
-
-          const group = groups[groupName];
-          if (!group) {
-            throw new InvalidGroupError(`The group "${groupName}" is not a valid group.`);
-          }
-
-          const user = 'baduser';
-          if (memberList.includes(user)) {
-            throw new InvalidActionError('NOT_MODIFIABLE', `The user "${user}" is not modifiable`);
-          }
-
-          groups[groupName].users = memberList;
-        },
-        getGroupUsers(groupName, ranges) { // eslint-disable-line no-unused-vars
-          const group = groups[groupName];
-          if (group) {
-            return group.users;
-          }
-
-          return false;
+    dirService: { // eslint-disable-line no-unused-vars
+      setUsersForGroup(groupName, memberList, isNewGroup) { // eslint-disable-line no-unused-vars
+        if (groupName === 'error') {
+          throw new Error("Oops!");
         }
+
+        const group = groups[groupName];
+        if (!group) {
+          throw new InvalidGroupError(`The group "${groupName}" is not a valid group.`);
+        }
+
+        const user = 'baduser';
+        if (memberList.includes(user)) {
+          throw new InvalidActionError('NOT_MODIFIABLE', `The user "${user}" is not modifiable`);
+        }
+
+        groups[groupName].users = memberList;
+      },
+      getGroupUsers(groupName, ranges) { // eslint-disable-line no-unused-vars
+        const group = groups[groupName];
+        if (group) {
+          return group.users;
+        }
+
+        return false;
       }
     }
   };

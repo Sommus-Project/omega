@@ -18,8 +18,7 @@ const path = require('path').posix;
  * }
  */
 async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
-  const { domain } = req.user;
-  const ds = req.dirService(domain);
+  const ds = req.dirService;
 
   try {
     const { disabled } = await ds.getUser(username);
@@ -44,8 +43,8 @@ doGet.auth = ['WRITE_USERS'];
  * @apiResponseExample <204> State of disabled set
  */
 async function doPut({ username, data, req }) { // eslint-disable-line no-unused-vars
-  const { domain, id: requestor } = req.user;
-  const ds = req.dirService(domain);
+  const { id: requestor } = req.user;
+  const ds = req.dirService;
   let user;
   try {
     user = await ds.getUser(username);

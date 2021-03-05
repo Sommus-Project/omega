@@ -1,10 +1,10 @@
 const bcrypt = require('bcrypt');
 const asyncForEach = require('../asyncForEach');
-//const sortWithoutCase = require('../sortWithoutCase');
 const { errors, HttpError } = require('../../..');
 const { AttributeError } = errors;
 const sortWithoutCase = require('../sortWithoutCase');
 const MySql = require('../MySql');
+const jwt = require('../jwt');
 const GROUP_CACHE_RESET_TIME = 5 * 60000; // 5 minutes
 const USER_SQL =`SELECT u.id, u.username, u.firstname, u.lastname, u.email,
   u.disabled, u.modifiable, u.deleted, pw.password, u.pwd_exp_warned, 
@@ -31,6 +31,7 @@ const EMPTY_ADDRESS = {
   lat: '',
   lng: ''
 }
+const SESSION_TIMEOUT = Number(process.env.SESSION_TIMEOUT || '20');
 let groupCache = [];
 
 // ✓ 2021-02-27 - Finished
@@ -162,9 +163,9 @@ function SqlService(serviceConfig) {
     // TODO: Need a way to set these
     DISABLE_USER_LOCKING: false,
     PASSWORD_IN_HISTORY: 10,
-    PASSWORD_MIN_AGE: 1,
-    PASSWORD_MAX_AGE: 60,
-    PASSWORD_MAX_FAILURE: 3
+    PASSWORD_MIN_AGE: 1, // days
+    PASSWORD_MAX_AGE: 60, // days
+    PASSWORD_MAX_FAILURE: 3,
   }
 
   // ✓ 2021-02-23 - Finished
@@ -176,14 +177,14 @@ function SqlService(serviceConfig) {
         NOW() > pw.expires_on locked, pw.password
         FROM omega_users u
         LEFT JOIN omega_passwords pw ON pw.user_id=u.id
-        WHERE u.deleted=0 AND u.pwd_retry_count < 4 AND pw.active=1 AND username=?`;
+        WHERE u.deleted=0 AND (u.pwd_retry_count < 4 OR ISNULL(u.pwd_retry_count)) AND pw.active=1 AND username=?`;
       const data = await mySql.queryOne(sql, [username]);
-      const isValid = (data.id && await comparePw(password, data.password));
+      const isValid = !!(data.id && await comparePw(password, data.password));
       if (!isValid && data.id) {
         const pwd_retry_count = data.pwd_retry_count + 1;
         const disabled = pwd_retry_count > 3 ? ', disabled=1' : '';
         sql = `UPDATE omega_users SET pwd_retry_count=${pwd_retry_count}${disabled} WHERE id=${data.id}`;
-        const newData = await mySql.queryOne(sql);
+        await mySql.queryOne(sql);
       }
 
       return isValid;
@@ -237,6 +238,47 @@ function SqlService(serviceConfig) {
     catch (ex) {
       console.error(ex.stack);
       throw (ex);
+    }
+
+    finally {
+      mySql.close();
+    }
+  }
+
+  async function createSession(username, onlyOneSessionPerUser) {
+    const mySql = new MySql(serviceConfig.db);
+    try {
+      let params;
+      let sql = `SELECT id user_id FROM omega_users WHERE deleted=0 AND username=?`;
+      const { user_id } = await mySql.queryOne(sql, [username]);
+      if (!user_id) {
+        throw new Error('INVALID_USERNAME');
+      }
+
+      if (onlyOneSessionPerUser) {
+        // If we allow only one session/user: delete all existing sessions.
+        sql = `DELETE FROM omega_sessions WHERE user_id=?`;
+        await mySql.queryOne(sql, [user_id]);
+      }
+      
+      const sessionId = await jwt.sign({ username });
+
+      const data = {
+        user_id,
+        username,
+        sessionId,
+        expires_on: { value: `NOW() + INTERVAL ${SESSION_TIMEOUT} MINUTE` }
+      };
+
+      ( { sql, params } = createInsert('omega_sessions', data));
+      await mySql.insert(sql, params);
+
+      return sessionId;
+    }
+
+    catch (ex) {
+      console.error(ex.stack);
+      throw ex;
     }
 
     finally {
@@ -531,6 +573,29 @@ function SqlService(serviceConfig) {
     return !!group;
   }
 
+  async function isSessionValid(username, sessionId) {
+    const mySql = new MySql(serviceConfig.db);
+    try {
+      let sql = `DELETE FROM omega_sessions WHERE expires_on < NOW()`;
+      await mySql.queryOne(sql);
+
+      sql = `SELECT COUNT(*) found FROM omega_sessions 
+      WHERE expires_on < NOW() AND username=? AND sessionId=?`;
+      const {found} = await mySql.queryOne(sql, [username, sessionId]);
+      return !!found;
+    }
+
+    catch (ex) {
+      console.error(ex.stack);
+      throw ex;
+    }
+
+    finally {
+      mySql.close();
+    }
+
+  }
+
   // ✓ 2021-02-27 - Finished
   async function setAddress(requestor, user_id, address_id, address) {
     const mySql = new MySql(serviceConfig.db);
@@ -697,10 +762,28 @@ function SqlService(serviceConfig) {
     });
     */
   }
+
+  async function touchSession(username, sessionId) {
+    const mySql = new MySql(serviceConfig.db);
+
+    try {
+      const sql = `UPDATE omega_sessions set expires_on=NOW() + INTERVAL ${SESSION_TIMEOUT} MINUTE WHERE username=? AND sessionId=?`;
+      const data = await mySql.queryOne(sql, [username, sessionId]);
+    }
+
+    catch (ex) {
+      console.error(ex.stack);
+    }
+
+    finally {
+      mySql.close();
+    }
+  }
   
   return {
     authenticate,
     createGroup,
+    createSession,
     createUser,
     delGroup,
     delUser,
@@ -711,11 +794,13 @@ function SqlService(serviceConfig) {
     getUserById,
     getUsers,
     isExistingGroup,
+    isSessionValid,
     setAddress,
     setAttr,
     setGroupDescription,
     setPassword,
-    setUsersForGroup
+    setUsersForGroup,
+    touchSession
   };
 }
 

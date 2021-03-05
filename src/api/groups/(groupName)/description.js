@@ -17,10 +17,7 @@ const path = require('path');
  * }
  */
 async function doGet({ groupName, req }) {
-  console.log({ groupName });
-  const { domain } = req.user;
-  console.log({ domain });
-  const ds = req.dirService(domain);
+  const ds = req.dirService;
   const group = await ds.getGroup(groupName);
   console.log({ group });
   if (!group) {
@@ -48,8 +45,7 @@ async function doPut({ groupName, data, req }) { // eslint-disable-line no-unuse
     throw new HttpError(400, 'You must provide a group "description".');
   }
 
-  const { domain } = req.user;
-  const ds = req.dirService(domain);
+  const ds = req.dirService;
   try {  
     await ds.setGroupDescription(requestor, groupName, description);
   }
