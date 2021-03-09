@@ -52,7 +52,6 @@ const {nanoid} = require('nanoid');
 const __folder = __dirname.replace(/(?:^[a-zA-Z]:)?\\/g, '/');
 const { version: omegaVersion } = require('./package.json');
 const OMEGA_API_PATH = path.join(__folder, 'dist/api');
-console.log(`OMEGA_API_PATH:[${OMEGA_API_PATH}]`);
 
 // Do not skip any request to the API path. Skip logging on all other calls if it is not an error response.
 const logSkipFn = (req, res) => (req.originalUrl.startsWith('/api')) ? false : res.statusCode < 400;
@@ -128,7 +127,6 @@ function initOmega(config = {}) { //eslint-disable-line complexity
 
   const options = Object.assign({}, DEFAULT_OPTIONS, config);
   options.appPath = options.appPath.replace(/(?:^[a-zA-Z]:)?\\/g, '/');
-  console.log(`options.appPath:[${options.appPath}]`)
 
   const appPath = options.appPath; // Root Path of the app using this code
   const brandStatic = path.join(appPath, options.brandFolder); // 3rd Party brand folder.
@@ -186,7 +184,6 @@ function initOmega(config = {}) { //eslint-disable-line complexity
   //********************************************************************************
   // Process cookies
   app.use(cookieParser(), async (req, res, next) => { //eslint-disable-line no-unused-vars
-    debugger;
     const { SESSION_COOKIE } = req;
 
     // res.sessionManager and req.dirService need to be set
@@ -202,12 +199,12 @@ function initOmega(config = {}) { //eslint-disable-line complexity
       try {
         const { username } = await jwt.verify(sessionId);
         const isValidSession = await dirService.isSessionValid(username, sessionId);
-        console.log({ isValidSession });
         if (isValidSession) {
           await req.user.init(req, username); // Initialize the user based on who is logged in.
           dirService.touchSession(username, sessionId);
         }
         else {
+          //console.log('sessionID was invalid. Clearing cookie.');
           // If this session cookie is invalid, then tell the browser to delete it
           res.set('Set-Cookie', `${SESSION_COOKIE}=invalid; Max-Age=0; Path=/`);
         }
@@ -218,12 +215,10 @@ function initOmega(config = {}) { //eslint-disable-line complexity
       }
     }
 
-    console.info(`User ${req.user.loggedIn ? 'is' : 'is not'} logged in.`);
-    console.log(JSON.stringify(req.user,0,2));
-
-    req.res.on('finish', () => {
+    res.on('finish', () => {
       // TODO: Clean things up, like the dirService, DB, etc.
     });
+
     next();
   });
 

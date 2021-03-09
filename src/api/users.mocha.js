@@ -53,7 +53,7 @@ describe('Tests for API: src/api/users.js', () => {
   let postData = {};
   const req = {
     user: {
-      username: 'ppotts',
+      username: 'ppotts'
     },
     query: {
       /*

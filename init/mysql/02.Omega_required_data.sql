@@ -6,9 +6,9 @@ INSERT INTO omega_addresses
 
 
 INSERT INTO omega_users 
-  (id, username,   firstname, lastname,  email,                  address_id, created_by, updated_by) VALUES
-  (1, 'system',    'SYSTEM',  'USER',    '',                     NULL,       1,          1),
-  (2, 'collinsmg', 'Michael', 'Collins', 'intervalia@gmail.com', 1,          1,          1);
+  (id, username,   firstname, lastname,  email,                  address_id, modifiable, created_by, updated_by) VALUES
+  (1, 'system',    'SYSTEM',  'USER',    '',                     NULL,       0,          1,          1),
+  (2, 'collinsmg', 'Michael', 'Collins', 'intervalia@gmail.com', 1,          1,          1,          1);
 
 
 INSERT INTO omega_passwords
@@ -22,7 +22,7 @@ INSERT INTO omega_passwords
 INSERT INTO omega_groups 
   (id, name,                description,                          removable, created_by, updated_by) VALUES
   (1,  'ADMIN',             'System Administrator',               0,         1,          1),
-  (2,  'SUPER-USER',        'Super User',                         0,         1,          1);
+  (2,  'SUPER-USER',        'Super User',                         0,         1,          1),
   (3,  'USER-EDITOR',       'Read, Create and edit users',        0,         1,          1),
   (4,  'GROUP-EDITOR',      'Read, Create and edit groups',       0,         1,          1),
   (5,  'PERMISSION-EDITOR', 'Read, Create and edit permissions',  0,         1,          1);
@@ -49,24 +49,26 @@ INSERT INTO omega_permissions
 INSERT INTO omega_group_permissions
   (group_id, permission_id, created_by, updated_by) VALUES
   # ADMIN group OMEGA
-  (  1,   1, 1, 1),
-  (  1,   2, 1, 1),
-  (  1,   3, 1, 1),
-  (  1,   4, 1, 1),
-  (  1,   5, 1, 1),
-  (  1,   7, 1, 1),
-  (  1,   8, 1, 1),
-  (  1,   9, 1, 1),
-  (  1,  10, 1, 1),
+  (  1,   1, 1, 1), # ADMIN
+  (  1,   2, 1, 1), # READ-USERS
+  (  1,   3, 1, 1), # WRITE-USERS
+  (  1,   4, 1, 1), # DELETE-USERS
+  (  1,   5, 1, 1), # READ-GROUPS
+  (  1,   6, 1, 1), # WRITE-GROUPS
+  (  1,   7, 1, 1), # DELETE-GROUPS
+  (  1,   8, 1, 1), # READ-PERMISSIONS
+  (  1,   9, 1, 1), # WRITE-PERMISSIONS
+  (  1,  10, 1, 1), # DELETE-PERMISSIONS
   # POWER-USER group Omega
-  (  2,   2, 1, 1),
-  (  2,   3, 1, 1),
-  (  2,   4, 1, 1),
-  (  2,   5, 1, 1),
-  (  2,   7, 1, 1),
-  (  2,   8, 1, 1),
-  (  2,   9, 1, 1),
-  (  2,  10, 1, 1),
+  (  2,   2, 1, 1), # READ-USERS
+  (  2,   3, 1, 1), # WRITE-USERS
+  (  2,   4, 1, 1), # DELETE-USERS
+  (  2,   5, 1, 1), # READ-GROUPS
+  (  2,   6, 1, 1), # WRITE-GROUPS
+  (  2,   7, 1, 1), # DELETE-GROUPS
+  (  2,   8, 1, 1), # READ-PERMISSIONS
+  (  2,   9, 1, 1), # WRITE-PERMISSIONS
+  (  2,  10, 1, 1), # DELETE-PERMISSIONS
   # USER-EDITOR group Omega
   (  3,   2, 1, 1), # READ-USERS
   (  3,   3, 1, 1), # WRITE-USERS

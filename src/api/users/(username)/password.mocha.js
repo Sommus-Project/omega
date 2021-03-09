@@ -25,7 +25,7 @@ describe('Tests for API: src/api/users/(username)/password.js', () => {
       username: 'ppotts'
     },
     query: {},
-    dirService { // eslint-disable-line no-unused-vars
+    dirService: { // eslint-disable-line no-unused-vars
       getUser(username) {
         let user = users.filter((item) => item.username === username)[0];
         if (!user) {

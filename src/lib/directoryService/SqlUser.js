@@ -24,7 +24,7 @@ const ATTR = {
   USERNAME: 'username',
   ZIP: 'zip'
 };
-const ADDRESS_FIELDS = ["address1", "address2", "city", "state", "country", "zip", "lat", "lng"];
+//const ADDRESS_FIELDS = ["address1", "address2", "city", "state", "country", "zip", "lat", "lng"];
 
 const RETRY_COUNT = 3;
 const ACCOUNT_INACTIVITY_LIMIT = 45;
@@ -244,12 +244,12 @@ class SqlUser extends DSUser {
   }
 
   // ✓ 2021-03-02 - Finished
-  async setCanChangePassword(requestor, date) {
+  async setCanChangePassword(/*requestor, date*/) {
     throw new Error('Unable to set this value.');
   }
 
   // ✓ 2021-03-02 - Finished
-  async setPasswordExpirationTime(requestor, date) {
+  async setPasswordExpirationTime(/*requestor, date*/) {
     throw new Error('Unable to set this value.');
   }
 

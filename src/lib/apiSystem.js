@@ -114,7 +114,6 @@ function initApiSystem(app, { appPath, showApiDocs = true, apiFolders } = {}) {
           }
           const keys = Object.keys(apiComponent);
 
-          console.log(`Linking endpoints for ${apiFilePath}`);
           debug(`Url: ${uri} - [${keys.join(', ')}]`);
           app.options(uri, apiCaller(OPTIONS, `(OPTIONS) ${uri}`, keys, debugFilePath));
           app.get(uri, apiCaller(apiComponent.doGet, `(GET) ${uri}`, keys, debugFilePath));
@@ -199,8 +198,10 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
       }
 
       catch(ex) {
+        console.error('--------------------------------------------------------------');
         console.error("UsageLog failed to initialize.");
         console.error(ex.stack);
+        console.error('--------------------------------------------------------------');
       }
 
       try {
@@ -245,8 +246,8 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
 
 
         req.usageLog.info(`Accessing enpoint ${action}`);
-        if (handler.sessionTouch !== false && req.sessionManager && req.sessionId) {
-          req.sessionManager.touchSession(req.sessionId);
+        if (handler.sessionTouch !== false && req.dirService && req.sessionId) {
+          req.dirService.touchSession(req.sessionId);
         }
 
         // Setup the values being passed in through the URL and Posted data

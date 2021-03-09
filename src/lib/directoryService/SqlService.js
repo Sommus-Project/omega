@@ -32,6 +32,7 @@ const EMPTY_ADDRESS = {
   lng: ''
 }
 const SESSION_TIMEOUT = Number(process.env.SESSION_TIMEOUT || '20');
+console.log({ SESSION_TIMEOUT });
 let groupCache = [];
 
 // ✓ 2021-02-27 - Finished
@@ -165,8 +166,8 @@ function SqlService(serviceConfig) {
     PASSWORD_IN_HISTORY: 10,
     PASSWORD_MIN_AGE: 1, // days
     PASSWORD_MAX_AGE: 60, // days
-    PASSWORD_MAX_FAILURE: 3,
-  }
+    PASSWORD_MAX_FAILURE: 3
+  };
 
   // ✓ 2021-02-23 - Finished
   async function authenticate(username, password) {
@@ -201,7 +202,7 @@ function SqlService(serviceConfig) {
   }
 
   // ✓ 2021-02-27 - Finished
-  async function createGroup(requestor, groupName, description, omega_users = []) {
+  async function createGroup(requestor, groupName, description, users = []) {
     const mySql = new MySql(serviceConfig.db);
     try {
       let fields = {
@@ -245,6 +246,7 @@ function SqlService(serviceConfig) {
     }
   }
 
+  // ✓ 2021-03-08 - Finished
   async function createSession(username, onlyOneSessionPerUser) {
     const mySql = new MySql(serviceConfig.db);
     try {
@@ -263,7 +265,7 @@ function SqlService(serviceConfig) {
       
       const sessionId = await jwt.sign({ username });
 
-      const data = {
+      let data = {
         user_id,
         username,
         sessionId,
@@ -271,6 +273,14 @@ function SqlService(serviceConfig) {
       };
 
       ( { sql, params } = createInsert('omega_sessions', data));
+      await mySql.insert(sql, params);
+
+      data = {
+        disabled: 0,
+        pwd_retry_count: 0,
+        updated_by: 1
+      };
+      ({ sql, params } = createUpdate('omega_users', 'id', user_id, data));
       await mySql.insert(sql, params);
 
       return sessionId;
@@ -286,17 +296,11 @@ function SqlService(serviceConfig) {
     }
   }
 
-  /* ✓ 2021-03-01 - TODO: Fix address
-   * • Make sure user does not already exist
-   * • Validate groups
-   * • Adds user
-   * • Adds password
-   * • Adds user to groups
-   */
+  // ✓ 2021-03-08 - Finished
   async function createUser(requestor, values, isTempPassword = true) {
     const {
-      username, firstname, lastname, address1, address2 = '',
-      city, state, zip, country, lat, lng, email, password, groups = []
+      username, firstname, lastname, address1, address2 = '', profile_picture = '',
+      city, state, zip, country, lat = '', lng = '', email, password, groups = []
     } = values;
 
     const mySql = new MySql(serviceConfig.db);
@@ -309,25 +313,33 @@ function SqlService(serviceConfig) {
 
       await validateGroups(mySql, groups);
 
-      // TODO: Get lat/lng from address
       let fields = {
-        username,
-        firstname,
-        lastname,
         address1,
         address2,
         city,
         state,
         zip,
         country,
-        //lat,
-        //lng,
-        email,
+        lat,
+        lng,
         created_by: requestor,
         updated_by: requestor
       };
-      const { sql: createSql, params } = createInsert('omega_users', fields);
-      const user_id = await mySql.insert(createSql, params);
+      let { sql, params } = createInsert('omega_addresses', fields);
+      const address_id = await mySql.insert(sql, params);
+
+      fields = {
+        username,
+        firstname,
+        lastname,
+        address_id,
+        email,
+        profile_picture,
+        created_by: requestor,
+        updated_by: requestor
+      };
+      ({ sql, params } = createInsert('omega_users', fields));
+      const user_id = await mySql.insert(sql, params);
 
       if (user_id) {
         fields = {
@@ -337,14 +349,14 @@ function SqlService(serviceConfig) {
           expires_on: { value: isTempPassword ? 'NOW() - INTERVAL 1 DAY' : `NOW() + INTERVAL ${CONFIG.PASSWORD_MAX_AGE} DAY` },
           can_change_on: { value: isTempPassword ? 'NOW() - INTERVAL 1 DAY' : `NOW() + INTERVAL ${CONFIG.PASSWORD_MIN_AGE} DAY` },
           created_by: requestor
-        }
-        const { sql: createPasswordSql, params: p2 } = createInsert('omega_passwords', fields);
-        await mySql.insert(createPasswordSql, p2);
+        };
+        ({ sql, params } = createInsert('omega_passwords', fields));
+        await mySql.insert(sql, params);
 
         if (groups.length > 0) {
           const groupValues = groups.map(group => `(${user_id}, ${Number(group)}, ${requestor}, ${requestor})`).join(', ');
-          const sql = `INSERT INTO omega_user_groups (user_id, group_id, created_by, updated_by) VALUES ${groupValues}`
-          /*const resp = */await mySql.insert(sql);
+          sql = `INSERT INTO omega_user_groups (user_id, group_id, created_by, updated_by) VALUES ${groupValues}`
+          await mySql.insert(sql);
         }
 
         return user_id;
@@ -431,6 +443,45 @@ function SqlService(serviceConfig) {
     return groupInfo[0];
   }
 
+  async function getGroupIdsFromNames(groupNames) {
+    console.log('--------------------------------------------------------------');
+    console.log(groupNames);
+    console.log('--------------------------------------------------------------');
+
+    if (!groupNames) {
+      throw new Error('NO_GROUP_NAMES');
+    }
+    if (!Array.isArray(groupNames)) {
+      groupNames = [groupNames];
+    }
+    if (groupNames.length === 0 || groupNames.join('').length === 0) {
+      throw new Error('NO_GROUP_NAMES');
+    }
+
+    groupNames = groupNames.map(groupNames => groupNames.replace(/_/g, '-'));
+
+    let { groups } = await this.getGroups();
+    groups = groups.reduce((acc, group) => {
+      acc[group.name] = group.id;
+      return acc;
+    }, {});
+
+    console.log(groups);
+    const allGroupNames = Object.keys(groups);
+    const groupIds = groupNames.map(g => {
+      if (allGroupNames.includes(g)) {
+        return groups[g]; // return the ID
+      }
+      else {
+        const err = Error(`INVALID_GROUP_NAME`);
+        err.additional = g;
+        throw err;
+      }
+    });
+
+    return groupIds;
+  }
+
   // ✓ 2021-02-27 - Finished
   async function getGroupUsers(groupName, { start = 0, limit = 12000, order = 'asc' } = {}) { // eslint-disable-line no-unused-vars
     console.info('calling getGroupUsers');
@@ -456,7 +507,7 @@ function SqlService(serviceConfig) {
     }
 
     const total = members.length;
-    const omega_users = members.sort(sortWithoutCase(order, 'username')).slice(start, start + limit);
+    const users = members.sort(sortWithoutCase(order, 'username')).slice(start, start + limit);
     const count = users.length;
     return {
       users,
@@ -474,7 +525,7 @@ function SqlService(serviceConfig) {
       try {
         const sql = `SELECT id, name, description, removable FROM omega_groups`;
         groupCache = normalizeGroups(await mySql.query(sql));
-        /*const groupCacheTimeout = */setTimeout(clearGroupsCache, GROUP_CACHE_RESET_TIME);
+        setTimeout(clearGroupsCache, GROUP_CACHE_RESET_TIME);
       }
 
       catch (ex) {
@@ -496,6 +547,25 @@ function SqlService(serviceConfig) {
       count,
       total
     };
+  }
+
+  // ✓ 2021-03-08 - Finished
+  async function getRemainingSessionTime(sessionId) {
+    const mySql = new MySql(serviceConfig.db);
+
+    try {
+      const sql = `SELECT expires_on-NOW() time FROM omega_sessions WHERE sessionId=?`;
+      const { time } = await mySql.queryOne(sql, [sessionId]);
+      return (time / 100 * 60) >>> 0;
+    }
+
+    catch (ex) {
+      console.error(ex.stack);
+    }
+
+    finally {
+      mySql.close();
+    }
   }
 
   // ✓ 2021-02-27 - Finished
@@ -522,7 +592,7 @@ function SqlService(serviceConfig) {
         data.groups = [...temp];
         const groupIds = data.groups.map(obj => obj.id);
         if (groupIds.length > 0) {
-          sql = `SELECT p.id, p.name FROM omega_permissions p
+          sql = `SELECT DISTINCT(p.id) id, p.name FROM omega_permissions p
             LEFT JOIN omega_group_permissions gp ON gp.permission_id = p.id
             WHERE gp.group_id in (${groupIds.join(',')})`
           data.roles = [...(await mySql.query(sql))||[]];
@@ -567,20 +637,39 @@ function SqlService(serviceConfig) {
     }
   }
 
+  // ✓ 2021-03-08 - Finished
+  async function invalidateSession(sessionId) {
+    const mySql = new MySql(serviceConfig.db);
+
+    try {
+      let sql = `DELETE FROM omega_sessions WHERE sessionId=?`;
+      await mySql.queryOne(sql, [sessionId]);
+    }
+
+    catch (ex) {
+      console.error(ex.stack);
+    }
+
+    finally {
+      mySql.close();
+    }
+  }
+
   // ✓ 2021-02-27 - Finished
   async function isExistingGroup(groupName) {
     const group = await getGroupByName(groupName.toLowerCase());
     return !!group;
   }
 
+  // ✓ 2021-03-08 - Finished
   async function isSessionValid(username, sessionId) {
     const mySql = new MySql(serviceConfig.db);
     try {
+      // Deleting expired sessions
       let sql = `DELETE FROM omega_sessions WHERE expires_on < NOW()`;
-      await mySql.queryOne(sql);
+      const temp = await mySql.queryOne(sql);
 
-      sql = `SELECT COUNT(*) found FROM omega_sessions 
-      WHERE expires_on < NOW() AND username=? AND sessionId=?`;
+      sql = `SELECT COUNT(*) found FROM omega_sessions WHERE username=? AND sessionId=?`;
       const {found} = await mySql.queryOne(sql, [username, sessionId]);
       return !!found;
     }
@@ -652,7 +741,7 @@ function SqlService(serviceConfig) {
         updated_by: requestor
       }
       const { sql, params } = createUpdate('omega_users', 'id', userId, fields) ;
-      const data = await mySql.queryOne(sql, params);
+      await mySql.query(sql, params);
     }
 
     catch (ex) {
@@ -763,12 +852,13 @@ function SqlService(serviceConfig) {
     */
   }
 
-  async function touchSession(username, sessionId) {
+  // ✓ 2021-03-08 - Finished
+  async function touchSession(sessionId) {
     const mySql = new MySql(serviceConfig.db);
 
     try {
-      const sql = `UPDATE omega_sessions set expires_on=NOW() + INTERVAL ${SESSION_TIMEOUT} MINUTE WHERE username=? AND sessionId=?`;
-      const data = await mySql.queryOne(sql, [username, sessionId]);
+      const sql = `UPDATE omega_sessions set expires_on=NOW() + INTERVAL ${SESSION_TIMEOUT} MINUTE WHERE sessionId=?`;
+      await mySql.query(sql, [sessionId]);
     }
 
     catch (ex) {
@@ -789,10 +879,13 @@ function SqlService(serviceConfig) {
     delUser,
     getConfig,
     getGroupByName,
+    getGroupIdsFromNames,
     getGroupUsers,
     getGroups,
+    getRemainingSessionTime,
     getUserById,
     getUsers,
+    invalidateSession,
     isExistingGroup,
     isSessionValid,
     setAddress,

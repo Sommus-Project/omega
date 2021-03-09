@@ -45,12 +45,12 @@ function directoryService(config) {
       return service.authenticate(username, password);
     },
 
-    // ✓ 2021-02-27
+    // ✓ 2021-02-27 - Finished
     async clearCache() {
       Object.keys(userCache).forEach(key => delete userCache[key]);
     },
 
-    // ------------------------------- NEED TO FINISH -------------------------------
+    // ------------------------------- NEED TO TEST -------------------------------
     async clearUserFromCache(username) {
       if (userCache[username]) {
         delete userCache[username];
@@ -72,6 +72,7 @@ function directoryService(config) {
       await service.createGroup(requestor, groupName, description, users);
     },
 
+    // ✓ 2021-03-08 - Finished
     async createSession(username, onlyOneSessionPerUser) {
       return service.createSession(username, onlyOneSessionPerUser);
     },
@@ -100,7 +101,12 @@ function directoryService(config) {
 
     // ✓ 2021-02-23 - Finished
     async getGroup(groupName) {
-      return await service.getGroupByName(groupName);
+      return service.getGroupByName(groupName);
+    },
+
+    // ✓ 2021-03-08 - Finished
+    async getGroupIdsFromNames(groupNames) {
+      return service.getGroupIdsFromNames(groupNames);
     },
 
     // ✓ 2021-02-27 - Finished
@@ -116,6 +122,11 @@ function directoryService(config) {
     // ✓ 2021-02-23 - Finished
     async getGroups(params) {
       return await service.getGroups(params);
+    },
+
+    // ✓ 2021-03-08 - Finished
+    async getRemainingSessionTime(sessionId) {
+      return service.getRemainingSessionTime(sessionId);
     },
 
     // ✓ 2021-02-23 - Finished
@@ -141,9 +152,14 @@ function directoryService(config) {
       return await service.getUsers(params);
     },
 
+    // ✓ 2021-03-08 - Finished
+    async invalidateSession(sessionId) {
+      return service.invalidateSession(sessionId);
+    },
+
     // ✓ 2021-03-04 - Finished
-    async isSessionValid(username, sessionToken) {
-      return service.isSessionValid(username, sessionToken);
+    async isSessionValid(username, sessionId) {
+      return service.isSessionValid(username, sessionId);
     },
 
     // ✓ 2021-02-27 - Finished
@@ -173,8 +189,8 @@ function directoryService(config) {
     },
 
     // ✓ 2021-03-04 - Finished
-    async touchSession(username, sessionId) {
-      return service.touchSession(username, sessionId);
+    async touchSession(sessionId) {
+      return service.touchSession(sessionId);
     },
 
     // ✓ 2021-02-27 - Finished

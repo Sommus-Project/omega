@@ -19,7 +19,6 @@ const path = require('path');
 async function doGet({ groupName, req }) {
   const ds = req.dirService;
   const group = await ds.getGroup(groupName);
-  console.log({ group });
   if (!group) {
     throw404(path.dirname(req.path), 'Group not found');
   }

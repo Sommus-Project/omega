@@ -23,7 +23,7 @@ async function initReqFn(req, res, options) { // eslint-disable-line no-unused-v
   if (sessionId) {
     req.rest.onSend(sender => {
       // Set session id for all calls to `req.rest`
-      sender.setCookie(SESSION_COOKIE, sessionId, false);
+      sender.setCookie('SESSION_COOKIE', sessionId, false);
     });
   }
   // END OPTIONAL CODE
@@ -48,11 +48,9 @@ const config = {
 };
 
 async function runApp() {
-  console.log("app: init omega");
   const app = omega(config);
-  console.log("app: start omega");
   app.start();
-  console.log("app: Finished");
+  console.log("Omega started");
 }
 
 runApp();

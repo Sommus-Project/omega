@@ -72,20 +72,24 @@ class MemoryStore {
   }
 
   async invalidateUser(username) {
+    /*
     Object.entries(this._sessions).forEach(([sessionId, data]) => {
       if (username === data.username) {
         delete this._sessions[sessionId];
       }
     });
+    */
   }
 
   async touchSession(sessionId) {
+    /*
     const foundSession = this._sessions[sessionId];
 
-    /* istanbul ignore else */
+    / * istanbul ignore else * /
     if (foundSession) {
       foundSession.expires = getExpTime(this._timeout);
     }
+    */
   }
 }
 

@@ -22,7 +22,6 @@ async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
 
   try {
     const user = await ds.getUser(username);
-    console.log(user);
     return { locked: user.locked };
   }
 

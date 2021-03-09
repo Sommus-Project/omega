@@ -59,10 +59,8 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
   const ds = req.dirService;
   try {
     let headers;
-    console.log(data);
     // ds.authenticate just checks to see of the password is valid for the username
     const authenticated = await ds.authenticate(username, password);
-    console.log(authenticated);
     if (authenticated) {
       // ds.createSession adds an entry into the logins table and
       const sessionId = await ds.createSession(username, ONLY_ONE_SESSION_PER_USER);

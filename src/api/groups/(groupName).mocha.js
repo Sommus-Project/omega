@@ -10,7 +10,7 @@ describe('Tests for API: src/api/groups/(groupName).js', () => {
   let groups = {};
   const req = {
     user: {
-      username: 'tomthumb',
+      username: 'tomthumb'
     },
     query: {
       /*

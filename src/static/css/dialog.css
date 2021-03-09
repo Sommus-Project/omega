@@ -25,6 +25,14 @@
   padding: 10px;
 }
 
+.dialog_error:not(:empty) {
+  background-color: #F77;
+  border: 1px solid #600;
+  box-sizing: border-box;
+  padding: 5px;
+  width: 100%;
+}
+
 .dialog_form {
   margin: 10px 0 0;
   width: 100%;

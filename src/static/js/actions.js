@@ -1,13 +1,17 @@
-console.log(`actions.js is loaded.`);
 const actionFunctions = {};
-document.addEventListener('click', (evt) => {
-  const action = evt.target.getAttribute('action');
+
+function triggerAction(action, evt = {}) {
   if (action && actionFunctions[action]) {
-    evt.stopPropagation();
-    evt.preventDefault()
     evt.action = action;
     actionFunctions[action].every(func => func(evt));
   }
+}
+
+document.addEventListener('click', (evt) => {
+  const action = evt.target.getAttribute('action');
+  evt.stopPropagation();
+  evt.preventDefault()
+  triggerAction(action);
 })
 
 function addActionHandler(action, func) { // eslint-disable-line no-unused-vars

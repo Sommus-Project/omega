@@ -50,7 +50,7 @@ class User {
   }
 
   get loggedIn() {
-    return !!this.username;
+    return !!this.username && !this.disabled && !this.deleted;
   }
 
   inGroup(group) {

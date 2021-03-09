@@ -1,6 +1,14 @@
 /* eslint-env omega/api */
 const VALID_NAME = /^.+$/i;
 
+async function doGet({ req }) { // eslint-disable-line no-unused-vars
+  const { username } = req.user;
+  const ds = req.dirService;
+  const { firstname, lastname } = await ds.getUser(username);
+  return { firstname, lastname };
+}
+doGet.loggedIn = true;
+
 /**
  * @api {put} /api/account/name Set user's name
  * @apiGroup Account
@@ -30,4 +38,4 @@ async function doPut({ data, req }) {
 }
 doPut.loggedIn = true;
 
-apimodule.exports = { doPut };
+apimodule.exports = { doGet, doPut };

@@ -43,13 +43,14 @@ doGet.auth = ['READ_USERS'];
  * @apiResponseExample <201> FIXME Success Reponse Title
  */
 async function doPut({ username, data, req }) { // eslint-disable-line no-unused-vars
-  if (!data || !Array.isArray(data.groups) || data.groups.some(g => typeof g != 'number')) {
-    throw new HttpError(400, { title: 'Groups must be an array of integers.' });
+  if (!data || !Array.isArray(data.groups) || data.groups.some(g => typeof g != 'string')) {
+    throw new HttpError(400, { title: 'Groups must be an array of strings.' });
   }
 
   const { id: requestor } = req.user;
   const ds = req.dirService;
   let user;
+  let groups;
   try {
     user = await ds.getUser(username);
   }
@@ -59,7 +60,8 @@ async function doPut({ username, data, req }) { // eslint-disable-line no-unused
   }
 
   try {
-    await user.setGroups(requestor, data.groups);
+    const groupIds = await ds.getGroupIdsFromNames(data.groups);
+    await user.setGroups(requestor, groupIds);
   }
 
   catch (ex) {

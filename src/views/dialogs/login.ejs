@@ -1,6 +1,7 @@
 <dialog class="dialog" id="loginDialog">
   <div class="dialog_title">Log in</div>
   <div class="dialog_body">Enter your username and password to log in.
+    <div class="dialog_error">Howdee</div>
     <form class="dialog_form">
       <label>Username:
         <input type="text" name="username" class="dialog-input" autofocus />
@@ -16,10 +17,9 @@
   </div>
 </dialog>
 <script>
-  addActionHandler('login', async (evt) => {
-    const loginResp = await openDialog('loginDialog');
+  async function logUserIn(info, dialogEl) {
     const options = {
-      body: JSON.stringify(loginResp.data),
+      body: JSON.stringify(info.data),
       cache: 'no-cache',
       headers: {
         'Content-Type': 'application/json; charset=utf-8'
@@ -27,27 +27,39 @@
       method: 'POST'
     }
     const resp = await fetch('/api/account/login', options);
-    let json;
     try {
-      json = await resp.json();
-      console.info(JSON.stringify(json, 0, 2));
+      const user = await resp.json();
+      console.log(`--------------- user info:`);
+      console.log(JSON.stringify(user, 0, 2));
       if (resp.status < 300) {
-        if (json.locked) {
+        if (user.locked) {
           alert('User is locked. Need admin to unlock account.')
         }
-        else if (json.passwordExpired) {
-          alert('User passwword has expired. Need to change your password.')
+        else if (user.passwordExpired) {
+          console.log(`Password expired.`);
+          triggerAction('changePassword');
         }
         else {
           // TODO: Redirect to page defined in QS
           window.location.reload();
         }
+
+        return false; // Close the dialog
       }
+
+      const errorEl = dialogEl.querySelector('.dialog_error');
+      errorEl.textContent = `Something happened! Response code: ${resp.status}`;
     }
-    catch(ex) {
+    catch (ex) {
       console.error(ex);
       console.error(await resp.text());
     }
+
+    return true; // Leave the dialog open
+  }
+
+  addActionHandler('login', async (evt) => {
+    await openDialog('loginDialog', { preSubmit: logUserIn });
   });
 
   addActionHandler('logout', async (evt) => {
@@ -61,10 +73,10 @@
       window.location.reload();
     }
     else {
-      json = await resp.json();
+      const error = await resp.json();
       // TODO: Should we just kill the session cookie here?
       console.error(`Error loggin out.`);
-      console.info(JSON.stringify(json, 0, 2));
+      console.info(JSON.stringify(error, 0, 2));
     }
   });
 </script>

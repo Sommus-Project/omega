@@ -50,7 +50,7 @@ var year = (new Date()).getFullYear();
     <label>New Password:
       <input class="" type="text" value="" id="newpw" />
     </label>
-    <button action="changePassword">Change Password</button>
+    <button action="submitPasswordChange">Change Password</button>
   </div>
   <div class="fb-item">
     <h4>Change Name</h4>
@@ -109,7 +109,7 @@ var year = (new Date()).getFullYear();
   </div>
 </div>
 <script>
-  addActionHandler('changePassword', async (evt) => {
+  addActionHandler('submitPasswordChange', async (evt) => {
     const oldPwEl = document.getElementById('oldpw');
     const newPwEl = document.getElementById('newpw');
     const existingPassword = oldPwEl.value;

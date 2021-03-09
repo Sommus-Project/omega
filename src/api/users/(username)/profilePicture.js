@@ -54,8 +54,6 @@ async function doPut({ username, data, req }) {
   }
 
   try {
-    console.log(`----------------- Setting the profilePicture on the user`);
-    console.log(data.profilePicture);
     await user.setProfilePicture(requestor, data.profilePicture);
   }
 
