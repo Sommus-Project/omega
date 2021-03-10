@@ -11,7 +11,7 @@
   "description": "Omega is the application framework for Node based apps. It provides a majority of the initialization requiring your app to provide minimal views, routing and API functionality.",
   "homepage": "https://github.com/Sommus-Project/omega/blob/master/README.md",
   "engines": {
-    "node": "12.16.1"
+    "node": "14.16.0"
   },
   "repository": {
     "type": "git",
@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@googlemaps/google-maps-services-js": "^3.1.16",
-    "@sp/omega-lib": "git+https://github.com/Sommus-Project/omega-lib.git",
+    "@sp/omega-lib": "git+https://github.com/Sommus-Project/omega-lib.git#v0.9.0",
     "@webcomponents/custom-elements": "^1.4.3",
     "@webcomponents/template": "^1.4.4",
     "bcrypt": "^5.0.1",
@@ -57,7 +57,7 @@
     "surface": "git+https://github.com/mildrenben/surface.git"
   },
   "devDependencies": {
-    "@sp/omega-tools": "git+https://github.com/Sommus-Project/omega-tools.git",
+    "@sp/omega-tools": "git+https://github.com/Sommus-Project/omega-tools.git#v0.9.0",
     "chai": "^4.3.3",
     "eslint": "^7.21.0",
     "eslint-plugin-omega": "git+https://github.com/Sommus-Project/eslint-plugin-omega.git",
