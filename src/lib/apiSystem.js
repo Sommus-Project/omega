@@ -275,6 +275,8 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
   }
 
   // Below is for handling the OPTIONS verb
+  // TODO: We need to return these headers for all endpoint requests
+  // to properly support CORS.
   return (req, res) => {
     // HTTP Response code 405 must return the `allow` header with the list of allowed verbs.
     debug(`Calling endpoint ${action} with unsupported verb.`);

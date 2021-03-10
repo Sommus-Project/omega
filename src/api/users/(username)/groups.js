@@ -50,7 +50,6 @@ async function doPut({ username, data, req }) { // eslint-disable-line no-unused
   const { id: requestor } = req.user;
   const ds = req.dirService;
   let user;
-  let groups;
   try {
     user = await ds.getUser(username);
   }

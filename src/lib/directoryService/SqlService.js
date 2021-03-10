@@ -458,9 +458,9 @@ function SqlService(serviceConfig) {
       throw new Error('NO_GROUP_NAMES');
     }
 
-    groupNames = groupNames.map(groupNames => groupNames.replace(/_/g, '-'));
+    groupNames = groupNames.map(groupName => groupName.replace(/_/g, '-'));
 
-    let { groups } = await this.getGroups();
+    let { groups } = await getGroups();
     groups = groups.reduce((acc, group) => {
       acc[group.name] = group.id;
       return acc;
@@ -472,11 +472,10 @@ function SqlService(serviceConfig) {
       if (allGroupNames.includes(g)) {
         return groups[g]; // return the ID
       }
-      else {
-        const err = Error(`INVALID_GROUP_NAME`);
-        err.additional = g;
-        throw err;
-      }
+
+      const err = Error(`INVALID_GROUP_NAME`);
+      err.additional = g;
+      throw err;
     });
 
     return groupIds;
@@ -667,7 +666,7 @@ function SqlService(serviceConfig) {
     try {
       // Deleting expired sessions
       let sql = `DELETE FROM omega_sessions WHERE expires_on < NOW()`;
-      const temp = await mySql.queryOne(sql);
+      await mySql.queryOne(sql);
 
       sql = `SELECT COUNT(*) found FROM omega_sessions WHERE username=? AND sessionId=?`;
       const {found} = await mySql.queryOne(sql, [username, sessionId]);

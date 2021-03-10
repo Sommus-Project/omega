@@ -1,6 +1,6 @@
 {
   "name": "@sp/omega",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "main": "index.js",
   "author": "Michael Collins <intervalia@gmail.com>",
   "contributors": [
@@ -28,7 +28,8 @@
     "lint": "eslint \"src/**/*.js\" index.js",
     "postinstall": "npm run build-files",
     "start": "node dist/app",
-    "test": "npm run lint && npm run test-mocha",
+    "test": "npm run lint",
+    "test-real": "npm run lint && npm run test-mocha",
     "test-mocha": "nyc --nycrc-path test/.nycrc-mocha.json ./node_modules/.bin/_mocha \"src/**/*.mocha.js\"",
     "watch": "omega watch"
   },

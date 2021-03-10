@@ -71,7 +71,7 @@ class MemoryStore {
     delete this._sessions[sessionId];
   }
 
-  async invalidateUser(username) {
+  async invalidateUser(username) { // eslint-disable-line no-unused-vars
     /*
     Object.entries(this._sessions).forEach(([sessionId, data]) => {
       if (username === data.username) {
@@ -81,7 +81,7 @@ class MemoryStore {
     */
   }
 
-  async touchSession(sessionId) {
+  async touchSession(sessionId) { // eslint-disable-line no-unused-vars
     /*
     const foundSession = this._sessions[sessionId];
 

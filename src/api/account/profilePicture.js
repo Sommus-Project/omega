@@ -1,11 +1,6 @@
 /* eslint-env omega/api */
-// API file: profilePicture
-// Source File: src/api/account/profilePicture.js
-// Generated on: 7/19/2019, 10:34:33 AM
-const path = require('path').posix;
-
 async function doGet({ req }) {
-  const { username, id: requestor } = req.user;
+  const { username } = req.user;
   const ds = req.dirService;
   const { profilePicture } = await ds.getUser(username);
   return { profilePicture };

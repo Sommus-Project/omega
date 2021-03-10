@@ -1,9 +1,4 @@
 /* eslint-env omega/api */
-// API file: email
-// Source File: src/api/account/email.js
-// Generated on: 7/19/2019, 10:34:33 AM
-const path = require('path').posix;
-
 /**
  * @api {get} /api/account/email Get user.email
  * @apiGroup Users
