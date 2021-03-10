@@ -474,8 +474,7 @@ describe('Tests for Rest.js', () => {
         resp => {
           expect(resp.status).to.equal(404);
           rest.afterEach().then(
-            (data) => {
-              console.log(data);
+            () => {
               done(new Error('Should have REJECTED and did not.'));
             }
           ).catch(
@@ -495,8 +494,7 @@ describe('Tests for Rest.js', () => {
         resp => {
           expect(resp.status).to.equal(404);
           rest.afterEach().then(
-            (data) => {
-              console.log(data);
+            () => {
               done(new Error('Should have REJECTED and did not.'));
             }
           ).catch(
@@ -521,8 +519,7 @@ describe('Tests for Rest.js', () => {
       Promise.all(p).then(
         () => {
           rest.afterEach().then(
-            (data) => {
-              console.log(data);
+            () => {
               done(new Error('Should have REJECTED and did not.'));
             }
           ).catch(

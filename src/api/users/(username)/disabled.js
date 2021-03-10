@@ -8,7 +8,7 @@ const path = require('path').posix;
  * @api {get} /api/users/:username/disabled Get user.disabled
  * @apiGroup Users
  * @apiDescription Get the state of 'disabled' for the specified user
- * @apiPermissions (role) 'user-edit'
+ * @apiPermissions (role) 'WRITE_USERS'
  * @apiParam (path) username username of the user to read.
  * @apiRequestValue <200> (path) username johnsloan.
  * @apiRequestExample <200> Get disabled
@@ -18,34 +18,33 @@ const path = require('path').posix;
  * }
  */
 async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
-  let user;
+  const ds = req.dirService;
+
   try {
-    user = await ds.getUser(username);
+    const { disabled } = await ds.getUser(username);
+    return { disabled };
   }
 
   catch (ex) {
     throw404(path.dirname(req.path), ex.message);
   }
 
-  return { disabled: user.disabled };
 }
-doGet.auth = ['user-edit'];
+doGet.auth = ['WRITE_USERS'];
 
 /**
  * @api {put} /api/users/:username/disabled Set user.disabled
  * @apiGroup Users
  * @apiDescription Set the state of 'disabled' for the specified user
- * @apiPermissions (role) 'user-edit'
+ * @apiPermissions (role) 'WRITE_USERS'
  * @apiParam (path) username username of the user to affect.
  * @apiRequestValue <204> (path) username jillsmith.
  * @apiRequestExample <204> Set state of disabled
  * @apiResponseExample <204> State of disabled set
  */
 async function doPut({ username, data, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { id: requestor } = req.user;
+  const ds = req.dirService;
   let user;
   try {
     user = await ds.getUser(username);
@@ -56,14 +55,14 @@ async function doPut({ username, data, req }) { // eslint-disable-line no-unused
   }
 
   try {
-    await user.setDisabled(data.disabled || false);
+    await user.setDisabled(requestor, data.disabled);
   }
 
   catch (ex) {
-    throw new HttpError(400, { title: ex.message, data: `Unable to set 'disabled' for the user ${username}` });
+    throw new HttpError(400, { title: ex.message, data: `Unable to set 'disabled' for the user '${username}'` });
   }
 }
-doPut.auth = ['user-edit'];
+doPut.auth = ['WRITE_USERS'];
 
 
 apimodule.exports = { doGet, doPut };

@@ -21,8 +21,7 @@ const InvalidActionError = require('./directoryService/errors/InvalidActionError
  * }
  */
 async function doGet({ groupName, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const ds = req.dirService;
   const group = await ds.getGroup(groupName);
   if (group) {
     return group;
@@ -30,7 +29,7 @@ async function doGet({ groupName, req }) { // eslint-disable-line no-unused-vars
 
   throw404(req.path, `The group "${groupName}" does not exist.`);
 }
-doGet.auth = ['group-edit'];
+doGet.auth = ['READ_GROUPS'];
 
 /**
  * @api {delete} /api/groups/:groupName Delete (groupName)
@@ -43,8 +42,7 @@ doGet.auth = ['group-edit'];
  * @apiResponseExample <204> FIXME Success Reponse Title
  */
 async function doDelete({ groupName, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const ds = req.dirService;
   try {
     await ds.deleteGroup(groupName);
   }
@@ -63,6 +61,6 @@ async function doDelete({ groupName, req }) { // eslint-disable-line no-unused-v
     }
   }
 }
-doDelete.auth = ['group-edit'];
+doDelete.auth = ['DELETE_GROUPS'];
 
 apimodule.exports = { doGet, doDelete };

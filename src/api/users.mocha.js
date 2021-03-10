@@ -53,8 +53,7 @@ describe('Tests for API: src/api/users.js', () => {
   let postData = {};
   const req = {
     user: {
-      username: 'ppotts',
-      provider: 'default'
+      username: 'ppotts'
     },
     query: {
       /*
@@ -63,30 +62,30 @@ describe('Tests for API: src/api/users.js', () => {
       order
       */
     },
-    dirService(provider) { // eslint-disable-line no-unused-vars
-      return {
-        getUser(username) {
-          return users.filter((item) => item.username === username)[0];
-        },
-        getUsers() {
-          return {
-            count: users.length,
-            start: 0,
-            total: users.length,
-            users
-          };
-        },
-        createUser(username, name, password, groups) { // eslint-disable-line no-unused-vars
-          if (username === 'exception') {
-            const err = new Error('Failed to create user.');
-            err.code = 123;
-            err.subCode = 'abc';
-            throw err;
-          }
-
-          postData = { username, name, password, groups };
-          users.push(postData);
+    dirService: { // eslint-disable-line no-unused-vars
+      getUser(username) {
+        return users.filter((item) => item.username === username)[0];
+      },
+      getUsers() {
+        return {
+          count: users.length,
+          start: 0,
+          total: users.length,
+          users
+        };
+      },
+      //FAIL!!
+      //TODO: Fix this to take all correct params in an object
+      createUser(creator, { username, firstname, lastname, address1, address2, city, state, zip, country, email, password, groups }) { // eslint-disable-line no-unused-vars
+        if (username === 'exception') {
+          const err = new Error('Failed to create user.');
+          err.code = 123;
+          err.subCode = 'abc';
+          throw err;
         }
+
+        postData = { username, name, password, groups };
+        users.push(postData);
       }
     }
   };
@@ -100,7 +99,6 @@ describe('Tests for API: src/api/users.js', () => {
       modifiable: defUser.modifiable,
       name: defUser.name,
       passwordExpired: defUser.passwordExpired,
-      provider: req.user.provider,
       removable: defUser.removable,
       username: defUser.username
     }));

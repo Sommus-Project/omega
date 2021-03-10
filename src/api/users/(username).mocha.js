@@ -12,32 +12,29 @@ describe('Tests for API: src/api/users/(username).js', () => {
   let users = {};
   const req = {
     user: {
-      username: 'tomthumb',
-      provider: 'default'
+      username: 'tomthumb'
     },
-    dirService(provider) { // eslint-disable-line no-unused-vars
-      return {
-        deleteUser(username) {
-          const user = users[username];
-          if (user) {
-            delete users[username];
-            return;
-          }
-
-          throw new NoEntityError('failed');
-        },
-        getUser(username) {
-          if (username === 'error') {
-            throw new HttpError(500, ERROR_MESSAGE_500);
-          }
-
-          const user = users[username];
-          if (user) {
-            return user;
-          }
-
-          throw new NoEntityError('failed');
+    dirService: { // eslint-disable-line no-unused-vars
+      deleteUser(username) {
+        const user = users[username];
+        if (user) {
+          delete users[username];
+          return;
         }
+
+        throw new NoEntityError('failed');
+      },
+      getUser(username) {
+        if (username === 'error') {
+          throw new HttpError(500, ERROR_MESSAGE_500);
+        }
+
+        const user = users[username];
+        if (user) {
+          return user;
+        }
+
+        throw new NoEntityError('failed');
       }
     }
   };

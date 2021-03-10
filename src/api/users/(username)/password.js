@@ -8,15 +8,16 @@ const path = require('path').posix;
  * @api {put} /api/users/:username/password Set user.password
  * @apiGroup Users
  * @apiDescription Set the state of 'password' for the specified user
- * @apiPermissions (role) 'user-edit'
+ * @apiPermissions (role) 'WRITE_USERS'
  * @apiParam (path) username userpassword of the user to affect.
  * @apiRequestValue <204> (path) username jillsmith.
  * @apiRequestExample <204> Set state of password
  * @apiResponseExample <204> State of password set
  */
 async function doPut({ username, data, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { id: requestor } = req.user;
+  const { password } = data;
+  const ds = req.dirService;
   let user;
   try {
     user = await ds.getUser(username);
@@ -27,14 +28,14 @@ async function doPut({ username, data, req }) { // eslint-disable-line no-unused
   }
 
   try {
-    await user.setPassword(data.password);
+    await user.setPassword(requestor, password);
   }
 
   catch (ex) {
     throw new HttpError(400, { title: ex.message, data: `Unable to set 'password' for the user ${username}` });
   }
 }
-doPut.auth = ['user-edit'];
+doPut.auth = ['WRITE_USERS'];
 
 
 apimodule.exports = { doPut };

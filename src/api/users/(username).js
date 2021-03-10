@@ -1,4 +1,5 @@
 /* eslint-env omega/api */
+const InvalidActionError = require('./directoryService/errors/InvalidActionError');
 const NoEntityError = require('./directoryService/errors/NoEntityError');
 
 //*****************************
@@ -7,8 +8,8 @@ const NoEntityError = require('./directoryService/errors/NoEntityError');
 /**
  * @api {get} /api/users/:username Get (username)
  * @apiGroup Users
- * @apiDescription FIXME Description
- * @apiPermissions (role) FIXME 'conf-read'
+ * @apiDescription Read information about a user
+ * @apiPermissions (role) 'READ_USERS'
  * @apiParam (path) username FIXME Param description.
  * @apiRequestValue <200> (path) username FIXME Value.
  * @apiRequestExample <200> FIXME Success Request Title
@@ -29,8 +30,7 @@ const NoEntityError = require('./directoryService/errors/NoEntityError');
  * }
  */
 async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const ds = req.dirService;
 
   try {
     return await ds.getUser(username);
@@ -44,13 +44,13 @@ async function doGet({ username, req }) { // eslint-disable-line no-unused-vars
     throw ex;
   }
 }
-doGet.auth = ['user-edit'];
+doGet.auth = ['READ_USERS'];
 
 /**
  * @api {delete} /api/users/:username Delete user
  * @apiGroup Users
  * @apiDescription Delete the specified user
- * @apiPermissions (role) 'user-edit'
+ * @apiPermissions (role) 'DELETE_USERS'
  *
  * @apiRequestValue <204> (path) username some-user
  * @apiRequestExample <204> Delete existing user
@@ -69,20 +69,24 @@ doGet.auth = ['user-edit'];
  * }
  */
 async function doDelete({ username, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const { id: requestor } = req.user;
+  const ds = req.dirService;
   if (username === req.user.username) {
     throw new HttpError(400, 'You can not delete yourself.');
   }
 
   try {
-    await ds.deleteUser(username);
+    await ds.deleteUser(requestor, username);
   }
 
   catch (ex) {
+    if (ex instanceof InvalidActionError) {
+      throw new HttpError(409, 'Unable to delete user');
+    }
+    console.error(ex.stack);
     // We do not respond with 404 if the user is not found.
   }
 }
-doDelete.auth = ['user-edit'];
+doDelete.auth = ['DELETE_USERS'];
 
 apimodule.exports = { doGet, doDelete };

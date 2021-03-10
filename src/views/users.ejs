@@ -1,0 +1,182 @@
+<%
+page = {
+  bodyAttrs: {},
+  title: 'Form - Omega Test App',
+  description: 'Omega Test App form '
+};
+assets = {
+  head: {
+    js: [],
+    css: ['/css/example.css']
+  },
+  js: [],
+  css: []
+};
+var year = (new Date()).getFullYear();
+%>
+<% include header.ejs %>
+<h1>Omega test app User Management Page</h1>
+<style>
+  .fb-parent {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    flex-wrap: wrap;
+  }
+  .fb-item {
+    display: inline-block;
+    min-width: 350px;
+    width: 350px;
+  }
+  input {
+    border: 1px solid #000;
+    border-radius: 3px;
+    box-sizing: border-box;
+    display: block;
+    font: 14px Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+    margin: 3px 0;
+    padding: 8px 10px;
+    width: 100%;
+  }  
+</style>
+<% if (user.loggedIn) { %>
+<div class="fb-parent">
+  <div class="fb-item">
+    <h4>Change Password</h4>
+    <p><i>Warning!! These fields are NOT hidden. Your password will show!</i></p>
+    <label>Existing Password:
+      <input class="" type="text" value="" id="oldpw" autofocus /> 
+    </label>
+    <label>New Password:
+      <input class="" type="text" value="" id="newpw" />
+    </label>
+    <button action="submitPasswordChange">Change Password</button>
+  </div>
+  <div class="fb-item">
+    <h4>Change Name</h4>
+    <label>First name:
+      <input class="" type="text" value="<%-user.firstname%>" id="firstname" />
+    </label>
+    <label>Lastname:
+      <input class="" type="text" value="<%-user.lastname%>" id="lastname" />
+    </label>
+    <button action="changeName">Change Name</button>
+  </div>
+  <div class="fb-item">
+    <h4>Who Am I</h4>
+    <button action="whoAmI">Who am I</button>
+    <textarea style="height: 10em; width: 100%" id="whoAmIText"></textarea>
+  </div>
+  <div class="fb-item" style="width: 700px">
+    <h4>Create User</h4>
+    <label>Username:
+      <input class="" type="text" value="" id="cu_username" />
+    </label>
+    <label>Password:
+      <input class="" type="text" value="123LetMeIn" id="cu_password" />
+    </label>
+    <label>First name:
+      <input class="" type="text" value="Tom" id="cu_firstname" />
+    </label>
+    <label>Lastname:
+      <input class="" type="text" value="Smith" id="cu_lastname" />
+    </label>
+    <label>Email:
+      <input class="" type="text" value="tom.smith@tacos.com" id="cu_email" />
+    </label>
+    <label>Address line 1:
+      <input class="" type="text" value="500 S State St." id="cu_address1" />
+    </label>
+    <label>Address line 2:
+      <input class="" type="text" value="" id="cu_address2" />
+    </label>
+    <label>City:
+      <input class="" type="text" value="Orem" id="cu_city" />
+    </label>
+    <label>State:
+      <input class="" type="text" value="UT" id="cu_state" />
+    </label>
+    <label>Zip:
+      <input class="" type="text" value="84058" id="cu_zip" />
+    </label>
+    <label>Email:
+      <input class="" type="text" value="USA" id="cu_country" />
+    </label>
+    <label>Groups:
+      <input class="" type="text" value="100,101,102,106" id="cu_groups" />
+    </label>
+    <button action="createUser">Create User</button>
+  </div>
+</div>
+<script>
+  addActionHandler('submitPasswordChange', async (evt) => {
+    const oldPwEl = document.getElementById('oldpw');
+    const newPwEl = document.getElementById('newpw');
+    const existingPassword = oldPwEl.value;
+    const newPassword = newPwEl.value;
+    const options = {
+      body: JSON.stringify({ newPassword, existingPassword }),
+      cache: 'no-cache',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8'
+      },
+      method: 'PUT'
+    }
+    const resp = await fetch('/api/account/password', options);
+    console.log(`Worked [${resp.status === 204}]`);
+  });
+  addActionHandler('changeName', async (evt) => {
+    const firstnameEl = document.getElementById('firstname');
+    const lastnameEl = document.getElementById('lastname');
+    const firstname = firstnameEl.value;
+    const lastname = lastnameEl.value;
+    const options = {
+      body: JSON.stringify({ firstname, lastname }),
+      cache: 'no-cache',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8'
+      },
+      method: 'PUT'
+    }
+    const resp = await fetch('/api/account/name', options);
+    console.log(`Worked [${resp.status === 204}]`);
+  });
+  addActionHandler('createUser', async (evt) => {
+    const els = document.querySelectorAll('[id^="cu_"');
+    const data = {};
+    els.forEach(el => {
+      const key = el.id.substr(3);
+      data[key] = el.value
+    })
+
+    data.groups = data.groups.split(',').map(i => Number(i));
+
+    console.log(JSON.stringify(data,0,2));
+
+    const options = {
+      body: JSON.stringify(data),
+      cache: 'no-cache',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8'
+      },
+      method: 'POST'
+    }
+    const resp = await fetch('/api/users', options);
+    console.log(`status[${resp.status}]`);
+  })
+  addActionHandler('whoAmI', async (evt) => {
+    const options = {
+      cache: 'no-cache',
+      method: 'GET'
+    }
+    const resp = await fetch('/api/account/whoami', options);
+    const json = await resp.json();
+    const textarea = document.getElementById('whoAmIText');
+    textarea.value = `Status: ${resp.status}\n${JSON.stringify(json,0,2)}`;
+  })
+</script>
+<% }
+else { %>
+  <p>You must be logged in to view this page.</p>
+<% } %>
+<% include footer.ejs %>

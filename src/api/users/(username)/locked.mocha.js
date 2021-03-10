@@ -22,29 +22,26 @@ describe('Tests for API: src/api/users/(username)/locked.js', () => {
   let users = [];
   const req = {
     user: {
-      username: 'ppotts',
-      provider: 'default'
+      username: 'ppotts'
     },
     query: {},
-    dirService(provider) { // eslint-disable-line no-unused-vars
-      return {
-        getUser(username) {
-          let user = users.filter((item) => item.username === username)[0];
-          if (!user) {
-            throw new Error('no user found');
-          }
-
-          user = { ...user }; // Make a copy
-          user.setLocked = function (locked) {
-            if (locked === 99) {
-              throw new Error('bad locked');
-            }
-
-            currentLocked = locked;
-          }
-
-          return user;
+    dirService: { // eslint-disable-line no-unused-vars
+      getUser(username) {
+        let user = users.filter((item) => item.username === username)[0];
+        if (!user) {
+          throw new Error('no user found');
         }
+
+        user = { ...user }; // Make a copy
+        user.setLocked = function (locked) {
+          if (locked === 99) {
+            throw new Error('bad locked');
+          }
+
+          currentLocked = locked;
+        }
+
+        return user;
       }
     }
   };

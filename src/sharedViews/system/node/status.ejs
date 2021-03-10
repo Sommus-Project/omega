@@ -1,8 +1,8 @@
 <%
 page = {
   bodyAttrs: {},
-  title: 'IMAT System Home Page',
-  description: 'IMAT System Home Page',
+  title: 'Omega System Home Page',
+  description: 'Omega System Home Page',
   favicon: '/brand/img/favicon.ico'
 };
 assets = {
@@ -182,7 +182,7 @@ assets = {
     background-color: #BB2222;
   }
 </style>
-<h1>IMAT Node status</h1>
+<h1>Omega Node status</h1>
 <a href="/system">Back to system homepage</a>
 <hr/>
 <div class="content">
@@ -348,7 +348,6 @@ assets = {
   const charts = [cpuChart, memChart, loadChart, responseTimeChart, rpsChart, statusCodesChart];
 
   function onSpanChange(e) {
-    console.log('onSpanChange');
     e.target.classList.add('active');
     defaultSpan = parseInt(e.target.id, 10);
 
@@ -362,7 +361,6 @@ assets = {
   };
 
   socket.on('esm_start', function (data) {
-    console.log('ems_start');
     // Remove last element of Array because it contains malformed responses data.
     // To keep consistency we also remove os data.
     data[defaultSpan].responses.pop();
@@ -457,7 +455,6 @@ assets = {
   });
 
   socket.on('esm_stats', function (data) {
-    console.log('ems_stats');
     if (data.retention === spans[defaultSpan].retention &&
       data.interval === spans[defaultSpan].interval) {
       var os = data.os;

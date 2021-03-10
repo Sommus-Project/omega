@@ -22,6 +22,7 @@ const METHOD = {
 const DATA_METHODS = [METHOD.POST,METHOD.PUT,METHOD.PATCH];
 
 const two = num => `0${num}`.slice(-2);
+const byteSizeOfString = str => Buffer.byteLength(str);
 const defProp = (obj, key, val) => Object.defineProperty(obj, key, {value:val, writable:false});
 const urlEncode = val => Object.entries(val).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join('&');
 
@@ -104,7 +105,7 @@ class Sender {
         }
       }
 
-      this.setHeader('Content-Length', data.length);
+      this.setHeader('Content-Length', byteSizeOfString(data));
     }
 
     if (p.sendCB) {

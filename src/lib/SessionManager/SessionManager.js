@@ -1,8 +1,10 @@
-const crypto = require('crypto');
+//const crypto = require('crypto');
 const MemoryStore = require('./MemoryStore');
 //const RedisStore = require('./RedisStore');
+//const MySqlStore = require('./MySqlStore');
 const asyncForEach = require('../asyncForEach');
 const asyncSome = require('../asyncSome');
+const jwt = require('../jwt');
 const DEFAULT_TIMEOUT = 20; // 20 minutes
 
 class SessionManager {
@@ -24,17 +26,20 @@ class SessionManager {
     // if(options.redis) {
     //   this._store.push(new RedisStore(options.redis));
     // }
+
+    // if(options.sql) {
+    //   this._store.push(new MySqlStore(options.sel));
+    // }
   }
 
   async destroy() {
     await asyncForEach(this._stores, async store => await store.destroy());
   }
 
-  async createSession(username, provider) {
-    const hash = crypto.createHash('sha256');
-    hash.update(username + Date.now());
-    const sessionId = hash.digest('hex');
-    await this.addSession(sessionId, username, provider);
+  async createSession(username) {
+    const ts = Date.now()/1000;
+    const sessionId = jwt.sign({ username, ts });
+    await this.addSession(sessionId, username, ts);
     return sessionId;
   }
 
@@ -70,16 +75,16 @@ class SessionManager {
     await asyncForEach(this._stores, async store => await store.touchSession(sessionId));
   }
 
-  async addSession(sessionId, username, provider) {
-    await asyncForEach(this._stores, async store => await store.addSession(sessionId, username, provider));
+  async addSession(sessionId, username) {
+    await asyncForEach(this._stores, async store => await store.addSession(sessionId, username));
   }
 
   async invalidateSession(sessionId) {
     await asyncForEach(this._stores, async store => await store.invalidateSession(sessionId));
   }
 
-  async invalidateUser(username, provider) {
-    await asyncForEach(this._stores, async store => await store.invalidateUser(username, provider));
+  async invalidateUser(username) {
+    await asyncForEach(this._stores, async store => await store.invalidateUser(username));
   }
 }
 

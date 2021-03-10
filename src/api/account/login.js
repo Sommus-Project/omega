@@ -1,6 +1,5 @@
 /* eslint-env omega/api */
-
-const SESSION_COOKIE = require('./SESSION_COOKIE');
+const ONLY_ONE_SESSION_PER_USER = process.env.ONLY_ONE_SESSION_PER_USER==='true';
 
 //*****************************
 // API Functions
@@ -22,7 +21,6 @@ const SESSION_COOKIE = require('./SESSION_COOKIE');
  * @apiPermissions (none)
  * @apiParam (body) username the username of the user loggin in.
  * @apiParam (body) password the password of the user loggin in.
- * @apiParam (body) [provider="default"] the provider of the user loggin in.
  * @apiRequestExample <200> Logged in
  * {
  *   "username": "dogbert",
@@ -55,46 +53,32 @@ const SESSION_COOKIE = require('./SESSION_COOKIE');
  * }
  */
 async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
-  // TODO: If logged in then clear previous session
-  const { username, password, provider = 'default' } = data;
-  const ds = req.dirService(provider);
+  // TODO: ??If logged in then clear previous session??
+  const { SESSION_COOKIE } = req;
+  const { username, password } = data;
+  const ds = req.dirService;
   try {
-    await ds.authenticate(username, password);
-    req.usageLog.info(`User ${username} logged in.`);
-    const sessionId = await req.sessionManager.createSession(username, provider);
-    const headers = {
-      'set-cookie': `${SESSION_COOKIE}=${sessionId}; Path=/; HttpOnly; Secure;`
-    };
+    let headers;
+    // ds.authenticate just checks to see of the password is valid for the username
+    const authenticated = await ds.authenticate(username, password);
+    if (authenticated) {
+      // ds.createSession adds an entry into the logins table and
+      const sessionId = await ds.createSession(username, ONLY_ONE_SESSION_PER_USER);
+      headers = {
+        'set-cookie': `${SESSION_COOKIE}=${sessionId}; Path=/; SameSite=Strict; HttpOnly; Secure;`
+      };
 
-    const thereIsANextStep = false;
-    if (thereIsANextStep) {
-      const step = 'Do the next step';
-      headers['X-Next-Step'] = step;
-      console.log('Next Step: returning a 401');
-      return new HttpError(401, {
-        data: { code: 0, reason: step },
-        headers
-      });
+      const user = await ds.getUser(username);
+      user.setLastLogin(user.id);
+      return new HttpResponse(headers, user, 200);
     }
 
-    const user = await ds.getUser(username);
-    let status = 200;
-    if (user.locked || user.disabled) {
-      status = 401;
-      const reasons = [];
-      if (user.locked) {
-        reasons.push('LOCKED');
-      }
-      if (user.disabled) {
-        reasons.push('DISABLED');
-      }
-      headers['X-Reason'] = reasons.join(',');
-    }
-    return new HttpResponse(headers, user.toJSON(), status);
+    req.usageLog.warn(`Invalid credentials during log in.`);
+    throw new HttpError(400, "Invalid credentials");
   }
 
   catch (ex) {
-    req.usageLog.info(`User ${username} failed to log in.`);
+    req.usageLog.info(`Exception during log in.`);
     if (ex instanceof ReferenceError) {
       req.usageLog.info(`500 Error - ${ex.message}`);
       return new HttpError(500, ex.message);
@@ -121,20 +105,12 @@ If the user entered the wrong \`username\` or \`password\`, or if the user accou
       {
         name: 'username',
         type: 'string',
-        description: 'The username of the user loggin in',
-        required: true
+        description: 'The username of the user loggin in'
       },
       {
         name: 'password',
         type: 'string',
-        description: 'The password of the user loggin in',
-        required: true
-      },
-      {
-        name: 'provider',
-        type: 'string',
-        defaultValue: 'default',
-        description: 'The provider of the user loggin in'
+        description: 'The password of the user loggin in'
       }
     ]
   },

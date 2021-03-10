@@ -52,10 +52,10 @@ const MESSAGES = {
 class HttpError extends Error {
   constructor(status, options = {}) {
     var opts = (typeof options === 'string') ? {title: options} : options;
-    super(MESSAGES[status]);
+    super(opts.title || MESSAGES[status]);
     this.status = status;
     this.options = opts;
-    this.title = opts.title;
+    this.title = MESSAGES[status];
     this.headers = opts.headers;
     this.data = opts.data;
   }

@@ -1,6 +1,6 @@
 const API_FILES = '**/!(*.mocha).js';
 const HTTP_STATUS_NO_CONTENT = 204;
-const HTTP_STATUS_UNAUTHORIZED = 401;
+const HTTP_STATUS_UNAUTHORIZED = 401; // Must include WWW-Authenticate header
 const HTTP_STATUS_FORBIDDEN = 403;
 const HTTP_STATUS_METHOD_NOT_ALLOWED = 405;
 const HTTP_STATUS_SERVER_ERROR = 500;
@@ -65,10 +65,16 @@ function normalizeApiFolders(apiFolders, appPath) {
 
       uri = uri.slice(-1) === '/' ? uri : `${uri}/` // eslint-disable-line no-param-reassign
 
-      return {
-        uri,
-        folders: folders.map(folder => path.isAbsolute(folder) ? folder : path.join(appPath, folder))
-      };
+      const f = folders.reduce((acc, folder) => {
+        const temp = path.isAbsolute(folder) ? folder : path.join(appPath, folder);
+        if (!acc.includes(temp)) {
+          acc.push(temp);
+        }
+
+        return acc;
+      }, []);
+
+      return { uri, folders: f };
     }
   );
 }
@@ -108,7 +114,6 @@ function initApiSystem(app, { appPath, showApiDocs = true, apiFolders } = {}) {
           }
           const keys = Object.keys(apiComponent);
 
-          debug(`\nLinking endpoints for ${apiFilePath}`);
           debug(`Url: ${uri} - [${keys.join(', ')}]`);
           app.options(uri, apiCaller(OPTIONS, `(OPTIONS) ${uri}`, keys, debugFilePath));
           app.get(uri, apiCaller(apiComponent.doGet, `(GET) ${uri}`, keys, debugFilePath));
@@ -193,37 +198,56 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
       }
 
       catch(ex) {
+        console.error('--------------------------------------------------------------');
         console.error("UsageLog failed to initialize.");
         console.error(ex.stack);
+        console.error('--------------------------------------------------------------');
       }
 
       try {
-        if (handler.deprecated) {
-          res.setHeader('X-Api-Deprecated', handler.deprecated);
-        }
-
-        let isAllowed = true;
-        if (handler.loggedIn === true) {
-          if (!req.user.loggedIn) {
-            throw new HttpError(HTTP_STATUS_UNAUTHORIZED, `Must be logged in to access endpoint [${action}].`);
+        const { deleted, locked, disabled, loggedIn } = req.user;
+        let isAllowed = !(deleted || disabled);
+        
+        if (isAllowed) {
+          if (handler.deprecated) {
+            res.setHeader('X-Api-Deprecated', handler.deprecated);
           }
-        }
 
-        if (handler.auth) {
-          if (typeof handler.auth === 'function') {
-            throw new HttpError(HTTP_STATUS_SERVER_ERROR, 'Omega does not support API auth functions yet.');
+          if (handler.loggedIn === true) {
+            if (!loggedIn) {
+              req.usageLog.warn('Attempted to access enpoint that requires logged in user');
+              throw new HttpError(HTTP_STATUS_UNAUTHORIZED, { title: `Must be logged in to access endpoint [${action}].`, headers: { 'WWW-Authenticate': 'Bearer' } });
+            }
           }
-          else {
-            isAllowed = req.user.inRole(handler.auth);
+
+          if (handler.auth) {
+            if (typeof handler.auth === 'function') {
+              throw new HttpError(HTTP_STATUS_SERVER_ERROR, 'Omega does not support API auth functions yet.');
+            }
+            else {
+              if (!loggedIn) {
+                req.usageLog.warn('Attempted to access enpoint that requires logged in user');
+                throw new HttpError(HTTP_STATUS_UNAUTHORIZED, { title: `Must be logged in to access endpoint [${action}].`, headers: { 'WWW-Authenticate': 'Bearer' } });
+              }
+              if (locked) {
+                isAllowed = false;
+              }
+              else {
+                isAllowed = req.user.inRole(handler.auth);
+              }
+            }
           }
         }
 
         if (!isAllowed) {
+          req.usageLog.warn('Attempted to access enpoint with insufficient rights');
           throw new HttpError(HTTP_STATUS_FORBIDDEN, `Unable to access to endpoint "${action}"`);
         }
 
-        if (handler.sessionTouch !== false && req.sessionManager && req.sessionId) {
-          req.sessionManager.touchSession(req.sessionId);
+
+        req.usageLog.info(`Accessing enpoint ${action}`);
+        if (handler.sessionTouch !== false && req.dirService && req.sessionId) {
+          req.dirService.touchSession(req.sessionId);
         }
 
         // Setup the values being passed in through the URL and Posted data
@@ -234,6 +258,7 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
           sendResponse(req, res)
         ).catch(
           ex => {
+            req.usageLog.error(`Error calling endpoint ${action}: ${ex.message}`);
             ex.stack = apiFixStack(ex.stack, debugFilePath);
             sendError(req, res, ex);
           }
@@ -241,14 +266,17 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
       }
 
       catch(ex) {
+        req.usageLog.error(`Error calling endpoint ${action}`);
         debug(`Error calling endpoint ${action}\n${ex.stack}`);
         sendError(req, res, ex);
-        return Promise.resolve(); // Must always return a Promise
+        return Promise.resolve(); // Must always return a Promise?? TODO: Make sure this is true or delete it.
       }
     }
   }
 
   // Below is for handling the OPTIONS verb
+  // TODO: We need to return these headers for all endpoint requests
+  // to properly support CORS.
   return (req, res) => {
     // HTTP Response code 405 must return the `allow` header with the list of allowed verbs.
     debug(`Calling endpoint ${action} with unsupported verb.`);
@@ -259,6 +287,7 @@ function apiCaller(handler, action, methodNames, debugFilePath) {
       return acc;
     }, {OPTIONS:true});
 
+    // TODO: These headers need to be returned on all endpoint calls.
     if (handler === OPTIONS) {
       // This is for CORS pre-flight check
       let headers = {

@@ -1,19 +1,30 @@
 (() => {
   const [major, minor] = process.versions.node.split('.').map(num => Number(num));
-  if (major < 10 || major === 10 && minor < 10) {
-    console.error('\n\nOmega apps require node version 10.10.0 or newer.\n\n');
+  if (major < 14 || major === 14 && minor < 10) {
+    console.error('\n\nOmega apps require node version 14.10.0 or newer.\n\n');
     process.exit(1);
   }
 })();
 
 console.time('Total startup time');
+const APP_PATH = process.cwd().replace(/(?:^[a-zA-Z]:)?\\/g, '/');
+const fs = require('fs');
+const path = require('path').posix;
+// Load env vars if there is a file called '_env.js'
+// in the root folder of the applicaiton
+const envFilePath = path.join(APP_PATH, '_env.js');
+if (fs.existsSync(envFilePath)) {
+  const env = require(envFilePath);
+  Object.entries(env).forEach(([key, value]) => {
+    process.env[key] = value;
+  });
+}
 const apiSystem = require('./dist/lib/apiSystem');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const debug = require('debug')('Omega');
 const directoryService = require('./dist/lib/directoryService/directoryService');
 const DSUser = require('./dist/lib/directoryService/DSUser');
-const SESSION_COOKIE = require('./dist/lib/SESSION_COOKIE');
 const SessionManager = require('./dist/lib/SessionManager/SessionManager');
 const systemPages = require('./dist/lib/systemPages');
 const ejsMate = require('ejs-mate');
@@ -21,24 +32,24 @@ const error404Handler = require('./dist/lib/error404Handler');
 const errorHandler = require('./dist/lib/errorHandler');
 const express = require('express');
 const forceSecure = require('./dist/lib/forceSecure');
-const fs = require('fs');
 const getBrowserNeeds = require('./dist/lib/getBrowserNeeds');
 const getServerInfo = require('./dist/lib/getServerInfo');
 const initApp = require('./dist/lib/initApp');
 const isRegExp = require('./dist/lib/isRegExp');
 const isString = require('./dist/lib/isString');
 const logNameGenerator = require('./dist/lib/logNameGenerator');
+const jwt = require('./dist/lib/jwt');
 const morgan = require('morgan'); // Request logging
 const omegalib = require('@sp/omega-lib');
 const {isFalse, isTrue, makePathIfNeeded} = omegalib;
-const path = require('path').posix;
 const processAppRoutes = require('./dist/lib/processAppRoutes');
 const proxy = require('./dist/lib/black-list-proxy');
 const startup = require('./dist/lib/startup');
 const rfs = require('rotating-file-stream');
 const statusMonitor = require('express-status-monitor')({path: '/system/some_status_page_that_is_hard_to_find.blah'});
+const User = require('./dist/lib/User');
 const {nanoid} = require('nanoid');
-const __folder = __dirname.replace(/\\|[A-Z]\:[\\\/]/gi, '/');
+const __folder = __dirname.replace(/(?:^[a-zA-Z]:)?\\/g, '/');
 const { version: omegaVersion } = require('./package.json');
 const OMEGA_API_PATH = path.join(__folder, 'dist/api');
 
@@ -55,7 +66,7 @@ const DEFAULT_OPTIONS = {
     '/api': ['dist/api', OMEGA_API_PATH]
   },
   appHeaders: [],
-  appPath: process.cwd().replace(/\\/g, '/'),
+  appPath: APP_PATH,
   appRoutes: 'dist/routes/!(*.mocha).js',
   brandFolder: 'brand',
   cacheBuster: 0,
@@ -73,11 +84,12 @@ const DEFAULT_OPTIONS = {
   logSkipFn: false,
   maxLogFileSize: '500M',
   providers: {},
-  proxyHost: '10.10.9.238',
+  proxyHost: '',
   proxyPort: 443,
   proxyTimeout: 30000,
   redirectFn: null,
   serverName: `Omega/${omegaVersion}`,
+  sessionCookie: 'session',
   sessionManager: { memory: 20 },
   showApiDocs: true,
   staticFolder: 'dist/static',
@@ -114,7 +126,7 @@ function initOmega(config = {}) { //eslint-disable-line complexity
   debug('Omega app initialization started.');
 
   const options = Object.assign({}, DEFAULT_OPTIONS, config);
-  options.appPath = options.appPath.replace(/\\/g, '/');
+  options.appPath = options.appPath.replace(/(?:^[a-zA-Z]:)?\\/g, '/');
 
   const appPath = options.appPath; // Root Path of the app using this code
   const brandStatic = path.join(appPath, options.brandFolder); // 3rd Party brand folder.
@@ -132,7 +144,7 @@ function initOmega(config = {}) { //eslint-disable-line complexity
   // Setup Session Management
   const sessionManager = new SessionManager(options.sessionManager);
   DSUser.purgeSession = sessionManager.invalidateUser.bind(sessionManager);
-  const dirService = directoryService(options.providers);
+  const dirService = directoryService(options.directoryService);
 
   //********************************************************************************
   // Setup Express Application
@@ -144,10 +156,8 @@ function initOmega(config = {}) { //eslint-disable-line complexity
   //********************************************************************************
   // Initialize variables for each request
   app.use((req, res, next) => {
-    req.dirService = dirService;
-    req.sessionManager = sessionManager;
+    req.SESSION_COOKIE = options.sessionCookie || 'session';
     req.requestId = nanoid(); // Generate a new Request ID for each request
-
     if (options.serverName) {
       // Set the server name
       res.setHeader('Server', options.serverName);
@@ -173,8 +183,42 @@ function initOmega(config = {}) { //eslint-disable-line complexity
 
   //********************************************************************************
   // Process cookies
-  app.use(cookieParser(), (req, res, next) => { //eslint-disable-line no-unused-vars
-    req.sessionId = req.cookies[SESSION_COOKIE]; // Save the sessionId in the request
+  app.use(cookieParser(), async (req, res, next) => { //eslint-disable-line no-unused-vars
+    const { SESSION_COOKIE } = req;
+
+    // res.sessionManager and req.dirService need to be set
+    // before we try to get the current user
+    req.sessionManager = sessionManager;
+    req.dirService = dirService;
+
+    res.locals.user = req.user = new User();
+    const sessionId = req.cookies[SESSION_COOKIE];
+    if (sessionId) {
+      req.sessionId = sessionId;
+
+      try {
+        const { username } = await jwt.verify(sessionId);
+        const isValidSession = await dirService.isSessionValid(username, sessionId);
+        if (isValidSession) {
+          await req.user.init(req, username); // Initialize the user based on who is logged in.
+          dirService.touchSession(username, sessionId);
+        }
+        else {
+          //console.log('sessionID was invalid. Clearing cookie.');
+          // If this session cookie is invalid, then tell the browser to delete it
+          res.set('Set-Cookie', `${SESSION_COOKIE}=invalid; Max-Age=0; Path=/`);
+        }
+      }
+
+      catch (ex) {
+        console.error(ex.stack);
+      }
+    }
+
+    res.on('finish', () => {
+      // TODO: Clean things up, like the dirService, DB, etc.
+    });
+
     next();
   });
 

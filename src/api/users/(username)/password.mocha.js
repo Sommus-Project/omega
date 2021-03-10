@@ -22,30 +22,26 @@ describe('Tests for API: src/api/users/(username)/password.js', () => {
   let users = [];
   const req = {
     user: {
-      username: 'ppotts',
-      provider: 'default'
+      username: 'ppotts'
     },
     query: {},
-    dirService(provider) { // eslint-disable-line no-unused-vars
-      return {
-        getUser(username) {
-          let user = users.filter((item) => item.username === username)[0];
-          if (!user) {
-            throw new Error('no user found');
-          }
-
-          user = { ...user }; // Make a copy
-          console.log(`--------------- Found User: ${username}`);
-          user.setPassword = function (password) {
-            if (password === 'badpassword') {
-              throw new Error('bad password');
-            }
-
-            currentPassword = password;
-          }
-
-          return user;
+    dirService: { // eslint-disable-line no-unused-vars
+      getUser(username) {
+        let user = users.filter((item) => item.username === username)[0];
+        if (!user) {
+          throw new Error('no user found');
         }
+
+        user = { ...user }; // Make a copy
+        user.setPassword = function (password) {
+          if (password === 'badpassword') {
+            throw new Error('bad password');
+          }
+
+          currentPassword = password;
+        }
+
+        return user;
       }
     }
   };

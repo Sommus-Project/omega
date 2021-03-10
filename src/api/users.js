@@ -16,8 +16,8 @@ const getRanges = require('./getRanges');
 /**
  * @api {get} /api/users Get the list of users
  * @apiGroup Users
- * @apiDescription Get a list of users on this system based on the users provider/domain
- * @apiPermissions (role) 'user-edit'
+ * @apiDescription Get a list of users on this system
+ * @apiPermissions (role) 'READ_USERS'
  *
  * @apiRequestExample <200> Get list of users
  * @apiResponseExample <200> List of users
@@ -40,32 +40,18 @@ const getRanges = require('./getRanges');
  * ]
  */
 async function doGet({ req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
-  const resp = await ds.getUsers(getRanges(req.query));
-
-  //if (req.query.dev !== 'deep') {
-  resp.users = resp.users.map(user => ({
-    disabled: user.disabled,
-    locked: user.locked,
-    modifiable: user.modifiable,
-    name: user.name,
-    passwordExpired: user.passwordExpired,
-    provider,
-    removable: user.removable,
-    username: user.username
-  }));
-  //}
-
+  const ranges = getRanges(req.query);
+  const ds = req.dirService;
+  const resp = await ds.getUsers(ranges);
   return resp;
 }
-doGet.auth = ['user-edit'];
+doGet.auth = ['READ_USERS'];
 
 /**
  * @api {post} /api/users Create a new user
  * @apiGroup Users
- * @apiDescription Create a new user within the same provider/domain as the current user
- * @apiPermissions (role) 'user-edit'
+ * @apiDescription Create a new user
+ * @apiPermissions (role) 'WRITE_USERS'
  *
  * @apiRequestExample <201> Create a new user
  * {
@@ -88,12 +74,75 @@ doGet.auth = ['user-edit'];
  * }
  */
 async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
-  const { username, name, password, groups } = data;
+  const { id: requestor } = req.user;
+  const ds = req.dirService;
+  const { username = '', firstname = '', lastname = '',
+    address1 = '', address2 = '', city = '', state = '',
+    zip = '', country = '', email = '', password = '',
+    groups = [], temporaryPw = true } = data;
+
+  const errors = [];
+  if (!username) {
+    errors.push('"username" must be provided.');
+  }
+  if (!firstname) {
+    errors.push('"firstname" must be provided.');
+  }
+  if (!lastname) {
+    errors.push('"lastname" must be provided.');
+  }
+  if (!address1) {
+    errors.push('"address1" must be provided.');
+  }
+  if (!city) {
+    errors.push('"city" must be provided.');
+  }
+  if (!state) {
+    errors.push('"state" must be provided.');
+  }
+  if (!zip) {
+    errors.push('"zip" must be provided.');
+  }
+  if (!country) {
+    errors.push('"country" must be provided.');
+  }
+  if (!email) {
+    errors.push('"email" must be provided.');
+  }
+  if (!password) {
+    errors.push('"password" must be provided.');
+  }
+  if (!groups) {
+    errors.push('"groups" must be provided.');
+  }
+
+  if (errors.length > 0) {
+    const options = {
+      data: { errors },
+      title: 'Invalid Parameters'
+    }
+    return new HttpError(400, options);
+  }
+
   try {
-    await ds.createUser(username, name, password, groups);
-    return new EntityCreated(`${req.path}/${username}`, await ds.getUser(username));
+    const newUserData = {
+      username,
+      firstname,
+      lastname,
+      address1,
+      address2,
+      city,
+      state,
+      zip,
+      country,
+      email,
+      password,
+      groups
+    };
+    
+    await ds.createUser(requestor, newUserData, temporaryPw);
+    const newUser = await ds.getUser(username);
+    return new EntityCreated(`${req.path}/${username}`, newUser);
   }
 
   catch (ex) {
@@ -104,6 +153,6 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
     return new HttpError(400, options);
   }
 }
-doPost.auth = ['user-edit'];
+doPost.auth = ['WRITE_USERS'];
 
 apimodule.exports = { doGet, doPost };

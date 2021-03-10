@@ -18,16 +18,14 @@ class MemoryStore {
     }, testing ? 25 : 500);
   }
 
-  async addSession(sessionId, username, provider) {
-    if (this._sessions[sessionId] &&
-      (this._sessions[sessionId].username !== username || this._sessions[sessionId].provider !== provider)) {
+  async addSession(sessionId, username) {
+    if (this._sessions[sessionId] && this._sessions[sessionId].username !== username) {
       throw new Error('Invalid SessionId');
     }
 
     this._sessions[sessionId] = {
       expires: getExpTime(this._timeout),
-      username,
-      provider
+      username
     };
   }
 
@@ -56,18 +54,16 @@ class MemoryStore {
 
   async getUserFromSession(sessionId, touch = false) {
     let expires;
-    let provider;
     let username;
     const foundSession = this._sessions[sessionId];
 
     if (foundSession) {
       expires = foundSession.expires
-      provider = foundSession.provider;
       username = foundSession.username;
       if (touch) {
         this.touchSession(sessionId);
       }
-      return { expires, provider, username };
+      return { expires, username };
     }
   }
 
@@ -75,21 +71,25 @@ class MemoryStore {
     delete this._sessions[sessionId];
   }
 
-  async invalidateUser(username, provider) {
+  async invalidateUser(username) { // eslint-disable-line no-unused-vars
+    /*
     Object.entries(this._sessions).forEach(([sessionId, data]) => {
-      if (username === data.username && provider === data.provider) {
+      if (username === data.username) {
         delete this._sessions[sessionId];
       }
     });
+    */
   }
 
-  async touchSession(sessionId) {
+  async touchSession(sessionId) { // eslint-disable-line no-unused-vars
+    /*
     const foundSession = this._sessions[sessionId];
 
-    /* istanbul ignore else */
+    / * istanbul ignore else * /
     if (foundSession) {
       foundSession.expires = getExpTime(this._timeout);
     }
+    */
   }
 }
 

@@ -5,15 +5,13 @@
  * @apiGroup Account
  * @apiDescription Get information about the logged in user.
  * @apiPermissions (user)
- * @apiRequestValue <200> (cookie) imat-session "valid session id"
+ * @apiRequestValue <200> (cookie) session "valid session id"
  * @apiRequestExample <200> Who am I
  * @apiResponseExample <200> User information
  * {
  *   "username": "someuser",
- *   "provider": "default",
  *   "session_expires": 1570810038626,
  *   "name": "Some user",
- *   "uuid": "123e4567-e89b-42d3-a456-556642440000"
  *   "removable": true,
  *   "modifiable": true,
  *    ...

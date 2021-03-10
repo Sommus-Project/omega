@@ -23,8 +23,7 @@ const InvalidActionError = require('./directoryService/errors/InvalidActionError
  * }
  */
 async function doGet({ groupName, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const ds = req.dirService;
 
   const users = await ds.getGroupUsers(groupName, getRanges(req.query));
   if (users) {
@@ -33,13 +32,13 @@ async function doGet({ groupName, req }) { // eslint-disable-line no-unused-vars
 
   throw404(path.dirname(req.path), `The group "${groupName}" does not exist.`);
 }
-doGet.auth = ['group-edit'];
+doGet.auth = ['READ_GROUPS'];
 
 /**
  * @api {put} /api/groups/:groupName/users Set users for the group
  * @apiGroup Groups
  * @apiDescription Set users for the group
- * @apiPermissions (role) 'group-edit'
+ * @apiPermissions (role) 'WRITE_GROUPS'
  * @apiParam (path) groupName FIXME Param description.
  * @apiRequestValue <201> (path) groupName FIXME Value.
  * @apiRequestExample <201> FIXME Success Request Title
@@ -47,8 +46,7 @@ doGet.auth = ['group-edit'];
  * @apiResponseExample <201> FIXME Success Reponse Title
  */
 async function doPut({ groupName, data, req }) { // eslint-disable-line no-unused-vars
-  const { provider } = req.user;
-  const ds = req.dirService(provider);
+  const ds = req.dirService;
   const { users } = data;
 
   if (!Array.isArray(users)) {
@@ -73,6 +71,6 @@ async function doPut({ groupName, data, req }) { // eslint-disable-line no-unuse
     }
   }
 }
-doPut.auth = ['group-edit'];
+doPut.auth = ['WRITE_GROUPS'];
 
 apimodule.exports = { doGet, doPut };
