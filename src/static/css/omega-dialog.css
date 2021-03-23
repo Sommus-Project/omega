@@ -1,0 +1,96 @@
+.dialog[open] {
+  border: none;
+  border-radius: 5px;
+  box-shadow: 3px 3px 8px #0007;
+  left: 50%;
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999999;
+}
+
+.dialog[open]::backdrop {}
+
+.dialog_title {
+  border-radius: 5px 5px 0 0;
+  font: bold 20px Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+  padding: 12px 18px;
+}
+
+.dialog_body {
+  font: 16px Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+  padding: 18px;
+}
+
+.dialog_error:not(:empty) {
+  background-color: #F88;
+  border: 1px solid #600;
+  box-sizing: border-box;
+  margin: 12px 0;
+  padding: 8px 12px;
+  width: 100%;
+}
+
+.dialog_form {
+  margin: 18px 0 0;
+  width: 100%;
+}
+
+.dialog_form label {
+  display: block;
+  margin: 8px 0;
+}
+
+.dialog-input {
+  border: 1px solid #000;
+  border-radius: 3px;
+  box-sizing: border-box;
+  display: block;
+  font: 16px Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+  margin: 3px 0;
+  max-width: 100%;
+  padding: 8px 10px;
+  width: 100% !important;
+}
+
+[class*="dialog-button"] {
+  background-color: #359690;
+  border: 1px solid #334;
+  border-radius: 0px;
+  box-sizing: border-box;
+  color: #fff;
+  display: inline-block;
+  font: 16px Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+  margin: 3px 0;
+  padding: 8px 12px;
+  text-transform: none;
+}
+
+[class*="dialog-button"]:hover, [class*="dialog-button"]:focus {
+  box-shadow: 0 0 3px 1px #0008;
+  border-color: #334;
+  cursor: pointer;
+  opacity: 0.9;
+  outline: none;
+}
+
+[class*="dialog-button"]:hover {
+  cursor: pointer;
+}
+
+.dialog-button-second {
+  background-color: transparent;
+  border-color: transparent;
+  color: #000;
+}
+
+.dialog-button-danger {
+  background-color: #F23;
+  color: #000;
+}
+
+.dialog-button-hidden {
+  display: none;
+}

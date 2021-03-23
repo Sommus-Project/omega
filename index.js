@@ -72,6 +72,7 @@ const DEFAULT_OPTIONS = {
   cacheBuster: 0,
   certPath: path.join(__folder, 'defaultCerts/cert.pem'),
   db: {},
+  dirService: {},
   disableLogging: false,
   excludeSystemFiles: false,
   fileLimit: '1mb',
@@ -83,7 +84,6 @@ const DEFAULT_OPTIONS = {
   logPath: '../logs/node',
   logSkipFn: false,
   maxLogFileSize: '500M',
-  providers: {},
   proxyHost: '',
   proxyPort: 443,
   proxyTimeout: 30000,
@@ -184,40 +184,44 @@ function initOmega(config = {}) { //eslint-disable-line complexity
   //********************************************************************************
   // Process cookies
   app.use(cookieParser(), async (req, res, next) => { //eslint-disable-line no-unused-vars
-    const { SESSION_COOKIE } = req;
+    const isStaticFolder = STATIC_FOLDER_HIT_RE.test(req.originalUrl);
+    if (!req.method === "GET" || !isStaticFolder) {
+      debug('Loading the user from the session')
+      const { SESSION_COOKIE } = req;
 
-    // res.sessionManager and req.dirService need to be set
-    // before we try to get the current user
-    req.sessionManager = sessionManager;
-    req.dirService = dirService;
+      // res.sessionManager and req.dirService need to be set
+      // before we try to get the current user
+      req.sessionManager = sessionManager;
+      req.dirService = dirService;
 
-    res.locals.user = req.user = new User();
-    const sessionId = req.cookies[SESSION_COOKIE];
-    if (sessionId) {
-      req.sessionId = sessionId;
+      res.locals.user = req.user = new User();
+      const sessionId = req.cookies[SESSION_COOKIE];
+      if (sessionId) {
+        req.sessionId = sessionId;
 
-      try {
-        const { username } = await jwt.verify(sessionId);
-        const isValidSession = await dirService.isSessionValid(username, sessionId);
-        if (isValidSession) {
-          await req.user.init(req, username); // Initialize the user based on who is logged in.
-          dirService.touchSession(username, sessionId);
+        try {
+          const { username } = await jwt.verify(sessionId);
+          const isValidSession = await dirService.isSessionValid(username, sessionId);
+          if (isValidSession) {
+            await req.user.init(req, username); // Initialize the user based on who is logged in.
+            dirService.touchSession(username, sessionId);
+          }
+          else {
+            debug('sessionID was invalid. Clearing cookie.');
+            // If this session cookie is invalid, then tell the browser to delete it
+            res.set('Set-Cookie', `${SESSION_COOKIE}=invalid; Max-Age=0; Path=/`);
+          }
         }
-        else {
-          //console.log('sessionID was invalid. Clearing cookie.');
-          // If this session cookie is invalid, then tell the browser to delete it
-          res.set('Set-Cookie', `${SESSION_COOKIE}=invalid; Max-Age=0; Path=/`);
+
+        catch (ex) {
+          console.error(ex.stack);
         }
       }
 
-      catch (ex) {
-        console.error(ex.stack);
-      }
+      res.on('finish', () => {
+        // TODO: Clean things up, like the dirService, DB, etc.
+      });
     }
-
-    res.on('finish', () => {
-      // TODO: Clean things up, like the dirService, DB, etc.
-    });
 
     next();
   });
@@ -370,7 +374,14 @@ function initOmega(config = {}) { //eslint-disable-line complexity
       showApiDocs: options.showApiDocs
     };
 
-    apiSystem(app, apiOptions);
+    try {
+      apiSystem(app, apiOptions);
+    }
+
+    catch(ex) {
+      console.log('******************************************');
+      console.log(ex.stack);
+    }
   }
 
   //********************************************************************************
@@ -405,6 +416,9 @@ module.exports.copyFiles = omegalib.copyFiles;
 module.exports.dbFactory = omegalib.dbFactory;
 module.exports.deleteFolderRecursive = omegalib.deleteFolderRecursive;
 module.exports.DSUser = DSUser;
+module.exports.SQL_CONFIG = require('./dist/lib/SQL_CONFIG');
+module.exports.SqlUser = require('./dist/lib/directoryService/SqlUser');
+module.exports.SqlService = require('./dist/lib/directoryService/SqlService');
 module.exports.endsInSlash = omegalib.endsInSlash;
 module.exports.errors = {
   AttributeError: require('./dist/lib/directoryService/errors/AttributeError'),
@@ -417,6 +431,7 @@ module.exports.getFileArrayFromGlob = omegalib.getFileArrayFromGlob;
 module.exports.getHeader = require('./dist/lib/getHeader');
 module.exports.getXForwardedForHeader = require('./dist/lib/getXForwardedForHeader');
 module.exports.HttpError = require('./dist/lib/HttpError');
+module.exports.EntityCreated = require('./dist/lib/EntityCreated');
 module.exports.HttpResponse = require('./dist/lib/HttpResponse');
 module.exports.HTTPS_STATUS = require('./dist/lib/HTTPS_STATUS');
 module.exports.isFalse = isFalse;

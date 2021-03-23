@@ -35,14 +35,14 @@ const config = {
   db: {
     mysql: SQL_CONFIG
   },
+  directoryService: {
+    User: SqlUser,
+    service: SqlService({ db: SQL_CONFIG })
+  },
   httpPort: process.env.PORT || 5000,
   httpsPort: process.env.PORTS || 5001,
   initAppFn,
   initReqFn,
-  directoryService: {
-    User: SqlUser,
-    service: SqlService({db:SQL_CONFIG})
-  },
   staticFolder: 'dist/static',
   viewFolder: 'dist/views'
 };

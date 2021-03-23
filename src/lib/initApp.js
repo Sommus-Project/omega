@@ -74,7 +74,14 @@ function initApp(app, staticPaths, options) {
     });
 
     res.locals.url = `${req.protocol}://${req.hostname}${req.path}`;
-    res.locals.assets = {}; // The `assets` object for the EJS files
+    res.locals.assets = {
+      head: {
+        css: [],
+        js: []
+      },
+      css: [],
+      js: []
+    }; // The `assets` object for the EJS files
     res.locals.calcAssets = calcAssets(browserNeeds.module || 'mjs', listOfAssets);
     res.locals.locale = 'en-US'; // TODO: Set this to the correct locale
     res.locals.page = {}; // The `page` object for the EJS files

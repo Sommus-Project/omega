@@ -7,8 +7,14 @@ function connect(db) {
   }
 
   if (!db._connected) {
-    db.connection.connect();
-    db._connected = true;
+    try {
+      db.connection.connect();
+      db._connected = true;
+    }
+
+    catch(ex) {
+      console.error(ex.stack);
+    }
   }
 }
 

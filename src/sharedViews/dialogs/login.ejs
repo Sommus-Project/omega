@@ -1,0 +1,94 @@
+<dialog class="dialog" id="loginDialog">
+  <div class="dialog_title">Log in</div>
+  <div class="dialog_body">Enter your username and password to log in.
+    <div class="dialog_error"></div>
+    <form class="dialog_form" dialog-action="submit">
+      <label>Username:
+        <input type="text" name="username" class="dialog-input" autofocus />
+      </label>
+
+      <label>Password:
+        <input type="password" name="password" class="dialog-input" />
+      </label>
+
+      <button class="dialog-button" dialog-action="submit">Submit</button>
+      <button type="button" class="dialog-button-second" dialog-action="cancel">Cancel</button>
+    </form>
+  </div>
+</dialog>
+<script>
+  async function logUserIn(info, dialogEl) {
+    const errorEl = dialogEl.querySelector('.dialog_error');
+    const { username, password } = info.data;
+    if (!username || !password) {
+      errorEl.innerHTML = `You must enter your username and password.`;
+      return true;
+    }
+
+    const options = {
+      body: JSON.stringify(info.data),
+      cache: 'no-cache',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8'
+      },
+      method: 'POST'
+    }
+
+    const resp = await fetch('/api/account/login', options);
+    try {
+      const user = await resp.json();
+      console.log(`--------------- user info:`);
+      console.log(JSON.stringify(user, 0, 2));
+      if (resp.status < 300) {
+        if (user.locked) {
+          errorEl.innerHTML = 'Your account is locked.<br/>Talk to an admin to unlock your account.';
+        }
+        else if (user.passwordExpired) {
+          console.log(`Password expired.`);
+          triggerAction('changePassword');
+        }
+        else {
+          // TODO: Redirect to page defined in QS
+          window.location.reload();
+        }
+
+        return false; // Close the dialog
+      }
+
+      if (resp.status === 401) {
+        errorEl.textContent = `Invalid username or password.`;
+      }
+      else {
+        errorEl.textContent = `Something failed! Response code: ${resp.status}`;
+      }
+    }
+    catch (ex) {
+      console.error(ex);
+      console.error(await resp.text());
+    }
+
+    return true; // Leave the dialog open
+  }
+
+  addActionHandler('login', async (evt) => {
+    await openDialog('loginDialog', { preSubmit: logUserIn });
+  });
+
+  addActionHandler('logout', async (evt) => {
+    const options = {
+      cache: 'no-cache',
+      method: 'DELETE'
+    }
+    const resp = await fetch('/api/account/session', options);
+    console.info(resp);
+    if (resp.status < 300) {
+      window.location.reload();
+    }
+    else {
+      const error = await resp.json();
+      // TODO: Should we just kill the session cookie here?
+      console.error(`Error loggin out.`);
+      console.info(JSON.stringify(error, 0, 2));
+    }
+  });
+</script>

@@ -50,8 +50,17 @@ class MyModule extends Module {
     // from outside the function are available inside the funciton. The API code only has access
     // to `global` and the variables we pass in. It also prevents any naming collisions of
     // variables defined in the API code.
-    let fn = new Function(args, fnSrc); // eslint-disable-line no-new-func
-    fn(this, moduleRequire(this.libPath), modDirname, modFilename, throw404, HttpError, HttpResponse, isFalse, isTrue, mergeData, mergePatch);
+    try {
+      let fn = new Function(args, fnSrc); // eslint-disable-line no-new-func
+      fn(this, moduleRequire(this.libPath), modDirname, modFilename, throw404, HttpError, HttpResponse, isFalse, isTrue, mergeData, mergePatch);
+    }
+
+    catch(ex) {
+      // If there was a problem loading the new file then show the error
+      // DO NOT pass the exception along
+      console.error(`\nFailed to load file '${fPath}'`);
+      console.error(ex.message+'\n');
+    }
 
     return this.exports;
   }

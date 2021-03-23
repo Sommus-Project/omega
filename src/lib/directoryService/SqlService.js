@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const asyncForEach = require('../asyncForEach');
-const { errors, HttpError } = require('../../..');
-const { AttributeError } = errors;
+const AttributeError = require('./errors/AttributeError');
+const HttpError = require('../HttpError');
 const sortWithoutCase = require('../sortWithoutCase');
 const MySql = require('../MySql');
 const jwt = require('../jwt');
@@ -444,10 +444,6 @@ function SqlService(serviceConfig) {
   }
 
   async function getGroupIdsFromNames(groupNames) {
-    console.log('--------------------------------------------------------------');
-    console.log(groupNames);
-    console.log('--------------------------------------------------------------');
-
     if (!groupNames) {
       throw new Error('NO_GROUP_NAMES');
     }
