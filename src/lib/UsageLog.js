@@ -4,6 +4,7 @@ const path = require('path').posix;
 const os = require('os');
 const logFolder = path.join(process.cwd().replace(/\\/g, '/'), process.env.USAGE_LOGS || '../logs/node');
 const OS_HOST = os.hostname();
+const USE_USAGE_LOGFILE = process.env.USE_USAGE_LOGFILE==='true'
 //const MIN_IN_HOUR = 60;
 const { SEVERITY_LEVEL, SECURITY_LEVEL_STR} = require('./SEVERITY_LEVEL');
 const ANONYMOUS_USER = 'ANONYMOUS';
@@ -20,6 +21,12 @@ const REDACT_JSON_PATTERN = /((?:[a-z]*answer|[a-z]*password|[a-z]*passcode)\\?"
 // place them in front of the final quote in our replace function.
 // $3 will be the closing double quote followed by any number of spaces and either
 // a comma "," or closing curly brace "}"
+
+if (USE_USAGE_LOGFILE) {
+  if (!fs.existsSync(logFolder)) {
+    fs.mkdirSync(logFolder, { recursive: true });
+  }
+}
 
 class UsageLog {
   constructor(req) {
@@ -120,22 +127,27 @@ function redact(value='') {
 }
 
 function writeToStorage(data) {
-  // Get the filename based on the date. If the file does not exist it will be created
-  // when we call fa.appendFile
-  const dt = new Date();
-  const year = dt.getFullYear();
-  const month = fmt2(dt.getMonth()+1);
-  const date = fmt2(dt.getDate());
+  if (USE_USAGE_LOGFILE) {
+    // Get the filename based on the date. If the file does not exist it will be created
+    // when we call fa.appendFile
+    const dt = new Date();
+    const year = dt.getFullYear();
+    const month = fmt2(dt.getMonth()+1);
+    const date = fmt2(dt.getDate());
 
-  const usageFileName = path.join(logFolder, `node-usage.${year}-${month}-${date}.log`);
-  fs.appendFile(usageFileName, data, (err) => {
-    // istanbul ignore if
-    if (err) {
-      debug('Error while writing the usage logs:');
-      debug(err);
-      console.info(data);
-    }
-  });
+    const usageFileName = path.join(logFolder, `node-usage.${year}-${month}-${date}.log`);
+    fs.appendFile(usageFileName, data, (err) => {
+      // istanbul ignore if
+      if (err) {
+        debug('Error while writing the usage logs:');
+        debug(err);
+        console.info(data);
+      }
+    });
+  }
+  else {
+    console.info(data);
+  }
 }
 
 module.exports = UsageLog;
