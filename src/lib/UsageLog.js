@@ -1,7 +1,8 @@
+const debug = require('debug')('Omega:UsageLog');
 const fs = require('fs');
 const path = require('path').posix;
 const os = require('os');
-const logFolder = path.join(process.cwd().replace(/\\/g, '/'), `../logs/node`);
+const logFolder = path.join(process.cwd().replace(/\\/g, '/'), process.env.USAGE_LOGS || '../logs/node');
 const OS_HOST = os.hostname();
 //const MIN_IN_HOUR = 60;
 const { SEVERITY_LEVEL, SECURITY_LEVEL_STR} = require('./SEVERITY_LEVEL');
@@ -130,8 +131,9 @@ function writeToStorage(data) {
   fs.appendFile(usageFileName, data, (err) => {
     // istanbul ignore if
     if (err) {
-      console.error('Error while writing the usage logs:');
-      console.error(err);
+      debug('Error while writing the usage logs:');
+      debug(err);
+      console.info(data);
     }
   });
 }
