@@ -53,7 +53,6 @@ const ONLY_ONE_SESSION_PER_USER = process.env.ONLY_ONE_SESSION_PER_USER==='true'
  * }
  */
 async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
-  // TODO: ??If logged in then clear previous session??
   const { SESSION_COOKIE } = req;
   const { username, password } = data;
   const ds = req.dirService;
@@ -65,7 +64,7 @@ async function doPost({ data, req }) { // eslint-disable-line no-unused-vars
       // ds.createSession adds an entry into the logins table and
       const sessionId = await ds.createSession(username, ONLY_ONE_SESSION_PER_USER);
       headers = {
-        'set-cookie': `${SESSION_COOKIE}=${sessionId}; Path=/; SameSite=Strict; HttpOnly; Secure;`
+        'set-cookie': `${SESSION_COOKIE}=${sessionId}; Path=/; SameSite=Strict; HttpOnly;${req.protocol === 'https' ? ' Secure;' : ''}`
       };
 
       const user = await ds.getUser(username);
