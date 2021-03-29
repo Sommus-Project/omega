@@ -9,12 +9,19 @@ function triggerAction(code, evt = {}) {
 }
 
 document.addEventListener('click', (evt) => {
-  const action = evt.target.getAttribute('action');
-  if (action) {
-    evt.stopPropagation();
-    evt.preventDefault()
-    triggerAction(action, evt);
-  }
+  let target = evt.target;
+  do {
+    const action = target.getAttribute('action');
+    if (action) {
+      evt.stopPropagation();
+      evt.preventDefault();
+      triggerAction(action, evt);
+      break;
+    }
+    else {
+      target = target.parentElement;
+    }
+  } while(target);
 })
 
 function addActionHandler(action, func) { // eslint-disable-line no-unused-vars
