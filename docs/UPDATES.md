@@ -2,7 +2,14 @@
 
 | Date | Author | Ver | Description |
 | - | - | - | - |
-| 2020-03-04 | Mike Collins | 0.0.3 | * Added "og" meta tags for Facebook, Twitter, etc.
+| 2021-04-06 | Mike Collins | 0.9.4 | * Fixed the Change Password dialog to properly receive the dialogEl so it can set error messages.<br/>* Brought this file up to date. |
+| 2021-03-29 | Mike Collins | 0.9.3 | * Change Password dialog now outputs errors in the dialog instead of using the `alert()` operation.<br/>* the action handler now walks up the parent tree until it finds a node that has an `action` attribute. This allows `buttons`, or anything else to have children and still work. |
+| 2021-03-23 | Mike Collins | 0.9.2 | * Fixed the cookies sent by the login process to only send `secure` if we are connected via HTTPS. |
+| 2021-03-23 | Mike Collins | 0.9.1 | * Allow the usage logs to be turned off and output will go to console. |
+| 2021-03-09 | Mike Collins | 0.9.0 | * Updated `.eslintrc.json` to handle newer version of ECMASCRIPT.<br/>* Updated minimum required version of node.js to 14.10<br/>* Auto loading environment variables from file `_env.js`<br/>* Integrated all of the new Directory Service and user management code<br/>* Changed the original directory service to only handle a single domain.<br/>* Added SQL files for creating the minimal database needed for Omega users/groups/roles<br/>* Updated all repos</br>* Temporarily disabled all tests.<br/>* Added rest endpoints for all things user and group.<br/>* Fixed `Rest` to get the correct BYTE size for strings instead of string length<br/>* Now using JWT for session cookie.<br/>* Added *Action Handler* and *Basic Dialog* code.<br/>* Included a Login dialog and a Change Password dialog.<br/>* Added a basic Omega test app. |
+| 2020-09-04 | Mike Collins | 0.1.0 | * Added author.ejs - Not sure why this was added. |
+| 2020-05-24 | Mike Collins | 0.0.4 | * Updated `forceSecure` to handle the Heroku environment.<br/>* Updated the error page to be more generic. |
+| 2020-03-04 | Mike Collins | 0.0.3 | * Added "og" meta tags for Facebook, Twitter, etc. |
 | 2020-02-27 | Mike Collins | 0.0.2 | * Updated Rest to use a buffer to allow image and binary downloads<br/>* Updated dependencies |
 | 2019-11-25 | Mike Collins | 4.0.2 | * (PS-1296) Corrected `requestId` to be `requestID` in the usage logs.<br/>* Updating Version<br/>* Updated dependencies<br/>* Updating UPDATES.md |
 | 2019-11-11 | Mike Collins | 4.0.1 | * Adding `X-Forwarded-Host` header<br/>* Updating Version<br/>* Updating UPDATES.md |
