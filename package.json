@@ -1,6 +1,6 @@
 {
   "name": "@sp/omega",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "main": "index.js",
   "author": "Michael Collins <intervalia@gmail.com>",
   "contributors": [
@@ -23,7 +23,7 @@
   "scripts": {
     "build": "npm run clean && npm run lint && npm run build-files",
     "clean": "omega rm static coverage .nyc_output dist",
-    "build-files": "omega build",
+    "build-files": "node ./node_modules/.bin/omega build",
     "debug-mocha": "node --inspect-brk node_modules/mocha/bin/_mocha --reporter tap \"src/lib/**/*.mocha.js\"",
     "lint": "eslint \"src/**/*.js\" index.js",
     "postinstall": "npm run build-files",
