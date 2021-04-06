@@ -2,7 +2,7 @@
 
 | Date | Author | Ver | Description |
 | - | - | - | - |
-| 2021-04-06 | Mike Collins | 0.9.4 | * Fixed the Change Password dialog to properly receive the dialogEl so it can set error messages.<br/>* Brought this file up to date. |
+| 2021-04-06 | Mike Collins | 0.9.4 | * Fixed the Change Password dialog to properly receive the dialogEl so it can set error messages.<br/>* Brought this file up to date.<br/>* Removed `console.log`<br/>* Get change password dialog to refresh screen when done. |
 | 2021-03-29 | Mike Collins | 0.9.3 | * Change Password dialog now outputs errors in the dialog instead of using the `alert()` operation.<br/>* the action handler now walks up the parent tree until it finds a node that has an `action` attribute. This allows `buttons`, or anything else to have children and still work. |
 | 2021-03-23 | Mike Collins | 0.9.2 | * Fixed the cookies sent by the login process to only send `secure` if we are connected via HTTPS. |
 | 2021-03-23 | Mike Collins | 0.9.1 | * Allow the usage logs to be turned off and output will go to console. |

@@ -37,14 +37,13 @@
     const resp = await fetch('/api/account/login', options);
     try {
       const user = await resp.json();
-      console.log(`--------------- user info:`);
-      console.log(JSON.stringify(user, 0, 2));
       if (resp.status < 300) {
         if (user.locked) {
           errorEl.innerHTML = 'Your account is locked.<br/>Talk to an admin to unlock your account.';
+          return true; // Leave the dialog open
         }
         else if (user.passwordExpired) {
-          console.log(`Password expired.`);
+          // Password expired - Force them to change their password
           triggerAction('changePassword');
         }
         else {
@@ -80,7 +79,6 @@
       method: 'DELETE'
     }
     const resp = await fetch('/api/account/session', options);
-    console.info(resp);
     if (resp.status < 300) {
       window.location.reload();
     }
