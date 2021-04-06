@@ -46,7 +46,7 @@ const processAppRoutes = require('./dist/lib/processAppRoutes');
 const proxy = require('./dist/lib/black-list-proxy');
 const startup = require('./dist/lib/startup');
 const rfs = require('rotating-file-stream');
-const statusMonitor = require('express-status-monitor')({path: '/system/some_status_page_that_is_hard_to_find.blah'});
+//const statusMonitor = require('express-status-monitor')({path: '/system/some_status_page_that_is_hard_to_find.blah'});
 const User = require('./dist/lib/User');
 const {nanoid} = require('nanoid');
 const __folder = __dirname.replace(/(?:^[a-zA-Z]:)?\\/g, '/');
@@ -149,7 +149,7 @@ function initOmega(config = {}) { //eslint-disable-line complexity
   //********************************************************************************
   // Setup Express Application
   const app = express();
-  app.use(statusMonitor); // "statusMonitor" Must be first middleware
+  //app.use(statusMonitor); // "statusMonitor" Must be first middleware
   app.set('x-powered-by', false); // Disable the `x-powered-by: Express` header
   app.set('trust proxy', 'loopback');// Enable X-Forwarded-For headers from 127.0.0.1 to be used for the originating IP 
 
