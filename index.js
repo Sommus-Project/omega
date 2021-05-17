@@ -127,6 +127,7 @@ function initOmega(config = {}) { //eslint-disable-line complexity
 
   const options = Object.assign({}, DEFAULT_OPTIONS, config);
   options.appPath = options.appPath.replace(/(?:^[a-zA-Z]:)?\\/g, '/');
+  const trustProxy = options.trustProxy || 'loopback';
 
   const appPath = options.appPath; // Root Path of the app using this code
   const brandStatic = path.join(appPath, options.brandFolder); // 3rd Party brand folder.
@@ -149,9 +150,9 @@ function initOmega(config = {}) { //eslint-disable-line complexity
   //********************************************************************************
   // Setup Express Application
   const app = express();
-  //app.use(statusMonitor); // "statusMonitor" Must be first middleware
+  app.set('trust proxy', trustProxy);// Enable X-Forwarded-For headers from 127.0.0.1 to be used for the originating IP
   app.set('x-powered-by', false); // Disable the `x-powered-by: Express` header
-  app.set('trust proxy', 'loopback');// Enable X-Forwarded-For headers from 127.0.0.1 to be used for the originating IP 
+  //app.use(statusMonitor); // "statusMonitor" Must be first middleware
 
   //********************************************************************************
   // Initialize variables for each request

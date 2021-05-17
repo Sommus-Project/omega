@@ -61,10 +61,10 @@ class MyModule extends Module {
       // DO NOT pass the exception along
       console.error('\n---------------------------------------------')
       console.error(`\x1B[31mFailed to load file '${fPath}'\x1B[0m`);
-      console.error(`\x1B[31m${ex.message}\x1B[0m\n`);
 
       const temp = ex.stack.match(ERROR_RE);
       if (temp) {
+        console.error(`\x1B[31m${ex.message}\x1B[0m\n`);
         let line = Number(temp[1]) - 2;
         let char = Number(temp[2]) + 1;
         let code  = src.split('\n');
@@ -83,6 +83,9 @@ class MyModule extends Module {
           }
         }
         console.error(output.join('\n')+'\n');
+      }
+      else {
+        console.error(`\x1B[31m${ex.stack}\x1B[0m\n`);
       }
       this.exports = {};
     }
